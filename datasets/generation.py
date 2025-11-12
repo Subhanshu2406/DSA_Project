@@ -23,12 +23,21 @@ class SocialNetworkGenerator:
         first_names = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan', 'Casey', 
                       'Riley', 'Avery', 'Quinn', 'Reese', 'Jamie', 'Parker',
                       'Skyler', 'Charlie', 'Drew', 'Elliot', 'Finley', 'Harper',
-                      'Blake', 'Cameron', 'Dakota', 'Emerson', 'Francis', 'Gray']
+                      'Blake', 'Cameron', 'Dakota', 'Emerson', 'Francis', 'Gray',
+                      'Jimeet','Subhanshu','Gokul']
         last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia',
                      'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez',
                      'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore',
-                     'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White']
+                     'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White',
+                     'Shastri','Gupta','Bansal']
         
+        all_possible_names = []
+
+        for first in first_names:
+            for last in last_names:
+                full_name = f"{first} {last}"
+                all_possible_names.append(full_name)
+
         users = []
         for i in range(1, self.num_users + 1):
             user = {

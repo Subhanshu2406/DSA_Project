@@ -112,13 +112,15 @@ public:
 
             for (const auto& edgeJSON : edgesArray) {
                 Edge edge;
-                edge.source = edgeJSON["source"];
-                edge.target = edgeJSON["target"];
-                edge.relationship_type = edgeJSON["relationship_type"];
-                edge.message_count = edgeJSON["message_count"];
-                edge.last_interaction = edgeJSON.value("last_interaction", "");
-                edge.distance = edgeJSON["distance"];
-                edge.established_at = edgeJSON["established_at"];
+
+                edge.source = edgeJSON.value("source", -1);
+                edge.target = edgeJSON.value("target", -1);
+                edge.relationship_type = edgeJSON.value("relationship_type", "");
+                edge.message_count     = edgeJSON.value("message_count", 0);
+                edge.last_interaction  = edgeJSON.value("last_interaction", "");
+                edge.distance          = edgeJSON.value("distance", 0.0);
+                edge.established_at    = edgeJSON.value("established_at", "");
+
 
                 edges.push_back(edge);
 

@@ -22,7 +22,7 @@ MUTUAL_FRIEND_WEIGHT = 0.5  # Weight for mutual friends in distance calculation
 MESSAGE_FREQ_WEIGHT = 0.3  # Weight for message frequency in distance calculation
 
 # Time evolution parameters
-NUM_DAYS = 90  # Number of days to generate snapshots
+NUM_DAYS = 10  # Number of days to generate snapshots
 START_DATE = "2024-01-01"  # Start date for dataset
 
 # Daily update probabilities

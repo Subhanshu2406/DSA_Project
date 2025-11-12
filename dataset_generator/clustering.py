@@ -22,28 +22,42 @@ class ClusteringManager:
         self.total_interests = total_interests
         self.interest_pool = [f"interest_{i}" for i in range(total_interests)]
         
+        # Create region centers once (these represent "cities" or "regions")
+        # Each region has a center point (lat, lon) that users cluster around
+        self.region_centers = [
+            (random.uniform(-90, 90), random.uniform(-180, 180))
+            for _ in range(num_regions)
+        ]
+        
     def assign_location(self) -> Tuple[float, float, int]:
         """
         Assign geographic location to a user.
         
+        The idea is to create geographic clusters (like cities or regions):
+        - Each region has a "center" point (center_lat, center_lon)
+        - Users assigned to that region are placed near the center with some randomness
+        - This creates realistic clustering where users in the same region are close together
+        
         Returns:
             Tuple of (latitude, longitude, region_id)
         """
+        # Randomly assign user to one of the regions
         region_id = random.randint(0, self.num_regions - 1)
         
-        # Create clustered regions (each region has a center)
-        region_centers = [
-            (random.uniform(-90, 90), random.uniform(-180, 180))
-            for _ in range(self.num_regions)
-        ]
+        # Get the center point for this region
+        # center_lat and center_lon are the "center" coordinates of the region
+        # Think of it like the center of a city - all users in this region
+        # will be placed around this center point
+        center_lat, center_lon = self.region_centers[region_id]
         
-        center_lat, center_lon = region_centers[region_id]
-        
-        # Add some noise around center (clustering effect)
+        # Add some noise around the center (clustering effect)
+        # This creates a "cloud" of users around each region center
+        # random.gauss(0, 10) means: mean=0, std_dev=10 degrees
+        # So users will be within roughly 10-20 degrees of the center
         lat = center_lat + random.gauss(0, 10)  # ~10 degree spread
         lon = center_lon + random.gauss(0, 10)
         
-        # Clamp to valid ranges
+        # Clamp to valid ranges (latitude: -90 to 90, longitude: -180 to 180)
         lat = max(-90, min(90, lat))
         lon = max(-180, min(180, lon))
         

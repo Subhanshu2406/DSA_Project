@@ -3,7 +3,7 @@ Configuration file for social media dataset generator.
 """
 
 # Graph parameters
-NUM_NODES = 1000
+NUM_NODES = 500
 NUM_REGIONS = 8  # Geographic regions for clustering
 MIN_INTERESTS_PER_USER = 2
 MAX_INTERESTS_PER_USER = 5
@@ -22,7 +22,7 @@ MUTUAL_FRIEND_WEIGHT = 0.5  # Weight for mutual friends in distance calculation
 MESSAGE_FREQ_WEIGHT = 0.3  # Weight for message frequency in distance calculation
 
 # Time evolution parameters
-NUM_DAYS = 10  # Number of days to generate snapshots
+NUM_DAYS = 5  # Number of days to generate snapshots
 START_DATE = "2024-01-01"  # Start date for dataset
 
 # Daily update probabilities
@@ -49,6 +49,6 @@ ACCOUNT_CREATION_END_DAYS_BEFORE = 0  # Some accounts created on start date
 
 # Export settings
 EXPORT_JSON = True
-EXPORT_CSV = True
+EXPORT_CSV = False
 OUTPUT_DIR = "data/generated"
 

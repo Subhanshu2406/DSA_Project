@@ -117,7 +117,9 @@ public:
                 edge.target = edgeJSON.value("target", -1);
                 edge.relationship_type = edgeJSON.value("relationship_type", "");
                 edge.message_count     = edgeJSON.value("message_count", 0);
-                edge.last_interaction  = edgeJSON.value("last_interaction", "");
+                // Handle null values for string fields
+                edge.last_interaction  = edgeJSON.contains("last_interaction") && !edgeJSON["last_interaction"].is_null() 
+                                         ? edgeJSON["last_interaction"].get<string>() : "";
                 edge.distance          = edgeJSON.value("distance", 0.0);
                 edge.established_at    = edgeJSON.value("established_at", "");
 

@@ -1,0 +1,8 @@
+{
+  "date": "2024-01-02T00:00:00",
+  "total_nodes": 1000,
+  "total_edges": 99982,
+  "friend_relationships": 23150,
+  "fan_relationships": 53682,
+  "average_degree": 199.964
+}

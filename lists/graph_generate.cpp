@@ -22,16 +22,19 @@ struct Node{
 class SocialNetworkGraph {
 private:
     int num_nodes;
-    vector<vector<Edge>> adj_list;  // Adjacency list with edge attributes
-    map<int, Node> nodes;           // Node attributes
-    
+    vector<vector<Edge>> adj_list;  // Adjacency list along with edge attributes
+    map<int, Node> nodes;           // node attributes
+    // map used because if we want 
+
 public:
     // Constructor
     SocialNetworkGraph(int n) : num_nodes(n) {
-        adj_list.resize(n + 1);  // +1 for 1-indexed nodes
+        adj_list.resize(n + 1);  
     }
-    
-    // Load graph from edgelist.txt
+    // all load... are the functions to read the data set generated 
+    // by our generater. 
+
+    // Load graph from auto generated edgelist.txt
     void loadEdgeList(string filename) {
         ifstream file(filename);
         int num_edges;
@@ -48,10 +51,11 @@ public:
             Edge e2 = {src, messages, mutuals, 0, 0};
             
             adj_list[src].push_back(e1);
-            adj_list[dest].push_back(e2);
+            adj_list[dest].push_back(e2); 
+            // updated the adjecency list along the traversal to edges.
         }
         file.close();
-        cout << "Loaded " << num_edges << " edges for " << num_nodes << " nodes\n";
+        // cout << "Loaded " << num_edges << " edges for " << num_nodes << " nodes\n";
     }
     
     // Load node attributes from nodes.txt
@@ -66,7 +70,7 @@ public:
             nodes[node.id] = node;
         }
         file.close();
-        cout << "Loaded " << n << " node attributes\n";
+        //cout << "Loaded " << n << " node attributes\n";
     }
     
     // Load edge attributes from edge_attributes.txt
@@ -94,6 +98,34 @@ public:
             }
         }
         file.close();
-        cout << "Loaded edge attributes\n";
+        //cout << "Loaded edge attributes\n";
     }
+
+    vector<int> mutual_friends(int user1, int user2){
+        vector<int> ans;
+
+        set<int> frnds1,frnds2;
+        for(auto i:adj_list[user1]){
+            frnds1.emplace(i.dest);
+        }
+        for(auto i:adj_list[user2]){
+            frnds2.emplace(i.dest);
+        }
+
+        set_intersection(frnds1.begin(),frnds1.end(),frnds2.begin(),frnds2.end(),back_inserter(ans));
+
+        return ans;
+
+    }
+
+    void displayUser(int user){
+        
+        Node dum = nodes[user];
+        cout << "\nUser ID: " << dum.id << endl;
+        cout << "Name: " << dum.name << endl;
+        cout << "Followers: " << dum.followers << endl;
+        cout << "Following: " << dum.following << endl;
+    }
+
+    // void displayEdge()
 };

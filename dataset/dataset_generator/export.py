@@ -55,6 +55,7 @@ class DataExporter:
         for node_id, node_data in graph.nodes(data=True):
             node_export = {
                 'user_id': node_id,
+                'name': node_data.get('name', ''),
                 'location': node_data.get('location', (0, 0)),
                 'region_id': node_data.get('region_id', 0),
                 'interests': node_data.get('interests', []),

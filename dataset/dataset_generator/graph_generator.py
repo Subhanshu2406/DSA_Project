@@ -13,6 +13,28 @@ from dataset_generator.clustering import ClusteringManager
 class GraphGenerator:
     """Generates the initial social network graph."""
     
+    # Common first and last names for random name generation
+    FIRST_NAMES = [
+        "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn",
+        "Sam", "Cameron", "Dakota", "Skylar", "Blake", "Sage", "River", "Phoenix",
+        "Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Sophia", "Mason",
+        "Isabella", "James", "Mia", "Benjamin", "Charlotte", "Lucas", "Amelia", "Henry",
+        "Harper", "Alexander", "Evelyn", "Michael", "Abigail", "Daniel", "Emily", "Matthew",
+        "Elizabeth", "Aiden", "Sofia", "Joseph", "Avery", "David", "Ella", "Jackson",
+        "Madison", "Logan", "Scarlett", "John", "Victoria", "Luke", "Aria", "Jack",
+        "Grace", "Owen", "Chloe", "Wyatt", "Penelope", "Carter", "Layla", "Julian"
+    ]
+    
+    LAST_NAMES = [
+        "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+        "Rodriguez", "Martinez", "Hernandez", "Lopez", "Wilson", "Anderson", "Thomas", "Taylor",
+        "Moore", "Jackson", "Martin", "Lee", "Thompson", "White", "Harris", "Sanchez",
+        "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King",
+        "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams",
+        "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts",
+        "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards"
+    ]
+    
     def __init__(self):
         """Initialize graph generator."""
         self.graph = nx.DiGraph()
@@ -21,6 +43,17 @@ class GraphGenerator:
             config.TOTAL_INTEREST_CATEGORIES
         )
         self.start_date = datetime.strptime(config.START_DATE, "%Y-%m-%d")
+    
+    def _generate_random_name(self) -> str:
+        """
+        Generate a random name for a user.
+        
+        Returns:
+            Random name string (first name + last name)
+        """
+        first_name = random.choice(self.FIRST_NAMES)
+        last_name = random.choice(self.LAST_NAMES)
+        return f"{first_name} {last_name}"
     
     def generate_nodes(self) -> None:
         """Generate all nodes with attributes."""
@@ -43,10 +76,14 @@ class GraphGenerator:
             )
             created_at = self.start_date - timedelta(days=days_before)
             
+            # Generate random name
+            name = self._generate_random_name()
+            
             # Add node with attributes
             self.graph.add_node(
                 user_id,
                 user_id=user_id,
+                name=name,
                 location=(lat, lon),
                 region_id=region_id,
                 interests=list(interests),  # Convert set to list for JSON serialization

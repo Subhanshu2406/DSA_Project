@@ -62,6 +62,7 @@ def main():
             for node_id, node_data in current_graph.nodes(data=True):
                 all_nodes_data.append({
                     'user_id': node_id,
+                    'name': node_data.get('name', ''),
                     'date': current_date.isoformat(),
                     'location_lat': node_data.get('location', (0, 0))[0],
                     'location_lon': node_data.get('location', (0, 0))[1],

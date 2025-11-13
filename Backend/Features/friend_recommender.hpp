@@ -109,6 +109,7 @@ public:
                     continue;
                 }
 
+                //if not already present then add it in the map
                 if (candidate_map.find(candidate_id) == candidate_map.end()) {
                     candidate_map[candidate_id] = FriendRecommendation();
                     candidate_map[candidate_id].recommended_user_id = candidate_id;
@@ -147,7 +148,7 @@ public:
             double geo_score = score_geographic_proximity(distance_km);
 
             // Community similarity (15% weight)
-            recommendation.community_similarity = 0.5; // Placeholder
+            recommendation.community_similarity = 0.4; // Placeholder
             double community_score = score_community_similarity(recommendation.community_similarity);
 
             // Total score
@@ -171,6 +172,7 @@ public:
                  return a.total_score > b.total_score; 
              });
 
+             // for getting set amount of friends suggestion
         if (result.size() > recommendation_count) {
             result.resize(recommendation_count);
         }

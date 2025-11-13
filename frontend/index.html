@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Graph Visualization</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Toolbar -->
+        <div class="toolbar">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search users..." autocomplete="off">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <div class="button-group">
+                <button id="btnMutualFriends" class="btn">Mutual Friends</button>
+                <button id="btnLeaderboard" class="btn">Influencer Leaderboard</button>
+                <button id="btnCommunities" class="btn">Community Detection</button>
+                <button id="btnShortestPath" class="btn">Shortest Path</button>
+                <button id="btnRecommendations" class="btn">Recommendations</button>
+                <button id="btnReset" class="btn btn-secondary">Reset View</button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Left Sidebar - Node Details -->
+            <div id="nodeDetailsPanel" class="sidebar left-sidebar">
+                <div class="sidebar-header">
+                    <h3>Node Details</h3>
+                    <button id="closeNodeDetails" class="close-btn">&times;</button>
+                </div>
+                <div id="nodeDetailsContent" class="sidebar-content">
+                    <p>Click on a node to view details</p>
+                </div>
+            </div>
+
+            <!-- Center - Cytoscape Canvas -->
+            <div id="cy" class="cytoscape-container"></div>
+
+            <!-- Right Sidebar - Feature Results -->
+            <div id="featureResultsPanel" class="sidebar right-sidebar">
+                <div class="sidebar-header">
+                    <h3 id="featureResultsTitle">Results</h3>
+                    <button id="closeFeatureResults" class="close-btn">&times;</button>
+                </div>
+                <div id="featureResultsContent" class="sidebar-content">
+                    <p>Select a feature to view results</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Mutual Friends -->
+    <div id="mutualFriendsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Find Mutual Friends</h2>
+            <div class="modal-form">
+                <label>First User ID:</label>
+                <input type="number" id="user1Input" placeholder="Enter user ID">
+                <label>Second User ID:</label>
+                <input type="number" id="user2Input" placeholder="Enter user ID">
+                <button id="findMutualFriends" class="btn">Find Mutual Friends</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Shortest Path -->
+    <div id="shortestPathModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Find Shortest Path</h2>
+            <div class="modal-form">
+                <label>Source User ID:</label>
+                <input type="number" id="sourceInput" placeholder="Enter source user ID">
+                <label>Target User ID:</label>
+                <input type="number" id="targetInput" placeholder="Enter target user ID">
+                <button id="findPath" class="btn">Find Path</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Recommendations -->
+    <div id="recommendationsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Friend Recommendations</h2>
+            <div class="modal-form">
+                <label>User ID:</label>
+                <input type="number" id="recommendUserInput" placeholder="Enter user ID">
+                <label>Number of Recommendations:</label>
+                <input type="number" id="recommendCountInput" value="10" min="1" max="50">
+                <button id="getRecommendations" class="btn">Get Recommendations</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/features.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+

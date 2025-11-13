@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "graph_generator.hpp"
-#include "algo_utils.hpp"
+#include "../graph_generator.hpp"
+#include "../algo_utils.hpp"
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -97,15 +97,15 @@ public:
         const Node* target_user = graph.getNode(target_user_id);
         if (!target_user) return {};
 
-        auto target_neighbors = graph.getNeighbors(target_user_id);
+        auto target_friends = graph.getFriends(target_user_id);
         map<int, FriendRecommendation> candidate_map;
 
         // Step 1: Find candidates (friends of friends)
-        for (int friend_id : target_neighbors) {
-            auto friend_neighbors = graph.getNeighbors(friend_id);
-            for (int candidate_id : friend_neighbors) {
+        for (int friend_id : target_friends) {
+            auto friend_connections = graph.getFriends(friend_id);
+            for (int candidate_id : friend_connections) {
                 // Skip if already friend or self
-                if (candidate_id == target_user_id || target_neighbors.count(candidate_id)) {
+                if (candidate_id == target_user_id || target_friends.count(candidate_id)) {
                     continue;
                 }
 
@@ -125,8 +125,8 @@ public:
 
             // Mutual friends count (40% weight)
             auto mutual = AlgoUtils::set_intersection_of_two(
-                target_neighbors,
-                graph.getNeighbors(candidate_id));
+                target_friends,
+                graph.getFriends(candidate_id));
             recommendation.mutual_friends_count = mutual.size();
             double mutual_score = score_mutual_friends(recommendation.mutual_friends_count);
 

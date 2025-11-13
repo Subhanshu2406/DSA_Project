@@ -17,14 +17,16 @@
 #pragma once
 
 #include "graph_generator.hpp"
-#include "mutual_friends.hpp"
-#include "friend_recommender.hpp"
-#include "pagerank.hpp"
-// #include "community_detection.hpp"
-// #include "influencer_ranking.hpp"
-// #include "centrality.hpp"
-#include "short_path.hpp"
+#include "Features/mutual_friends.hpp"
+#include "Features/friend_recommender.hpp"
+#include "Features/pagerank.hpp"
+#include "Features/community_detection.hpp"
+#include "Features/influencer_ranking.hpp"
+#include "Features/centrality.hpp"
+#include "Features/short_path.hpp"
+#include "Features/user_search.hpp"
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -57,7 +59,8 @@ public:
     CommunityDetector community_detector;
     InfluencerRanker influencer_ranker;
     CentralityAnalyzer centrality_analyzer;
-    OptimizedDistanceCalculator path_calculator;
+    mutable OptimizedDistanceCalculator path_calculator;
+    mutable UserSearchIndex user_search;
 
 private:
     const SocialGraph& graph;
@@ -75,7 +78,11 @@ public:
           community_detector(social_graph),
           influencer_ranker(social_graph),
           centrality_analyzer(social_graph),
-          path_calculator(social_graph) {}
+          path_calculator(social_graph),
+          user_search() {
+        // Build search index on construction
+        user_search.buildIndex(social_graph);
+    }
 
     /**
      * NETWORK STATISTICS
@@ -157,6 +164,20 @@ public:
     {
         return path_calculator.find_paths_batch(source, targets);
     }
+
+    // User Search (Autocomplete)
+    vector<int> search_users(const string& prefix, int limit = 10) const {
+        return user_search.search(prefix, limit);
+    }
+
+    vector<pair<int, string>> search_users_with_names(
+        const string& prefix, int limit = 10) const 
+    {
+        return user_search.searchWithNames(prefix, limit);
+    }
+
+    bool is_search_ready() const {
+        return user_search.isReady();
+    }
 };
 
-#endif // ALGORITHMS_HPP

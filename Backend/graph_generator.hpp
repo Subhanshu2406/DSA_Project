@@ -117,12 +117,27 @@ public:
                 edge.target = edgeJSON.value("target", -1);
                 edge.relationship_type = edgeJSON.value("relationship_type", "");
                 edge.message_count     = edgeJSON.value("message_count", 0);
+
                 // Handle null values for string fields
                 edge.last_interaction  = edgeJSON.contains("last_interaction") && !edgeJSON["last_interaction"].is_null() 
                                          ? edgeJSON["last_interaction"].get<string>() : "";
                 edge.distance          = edgeJSON.value("distance", 0.0);
                 edge.established_at    = edgeJSON.value("established_at", "");
+                
+                // edge.relationship_type =
+                //     edgeJSON.contains("relationship_type") && edgeJSON["relationship_type"].is_string()
+                //     ? edgeJSON["relationship_type"].get<string>()
+                //     : "";
 
+                edge.last_interaction =
+                    edgeJSON.contains("last_interaction") && edgeJSON["last_interaction"].is_string()
+                    ? edgeJSON["last_interaction"].get<string>()
+                    : "";
+
+                //  edge.established_at =
+                //     edgeJSON.contains("established_at") && edgeJSON["established_at"].is_string()
+                //     ? edgeJSON["established_at"].get<string>()
+                //     : "";
 
                 edges.push_back(edge);
 

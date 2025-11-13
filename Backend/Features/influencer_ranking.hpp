@@ -37,9 +37,9 @@ public:
         : graph(social_graph), pagerank_calculator(social_graph) {}
 
     vector<InfluencerRank> get_leaderboard(
-    int top_k = 10,
-    int pagerank_iterations = 20) const
-{
+        int top_k = 10,
+        int pagerank_iterations = 20) const
+    {
     if (graph.getNodeCount() == 0 || top_k <= 0)
         return {};
 

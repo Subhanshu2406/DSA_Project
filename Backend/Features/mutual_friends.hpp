@@ -65,7 +65,7 @@ public:
         result.total_degree_1 = friends_1.size();
         result.total_degree_2 = friends_2.size();
 
-        // Early exit: no friends means no mutual friends
+        // no friends means no mutual friends
         if (friends_1.empty() || friends_2.empty()) {
             return result;
         }
@@ -75,15 +75,16 @@ public:
         const auto& larger = friends_1.size() <= friends_2.size() ? friends_2 : friends_1;
 
         // Count intersection without creating intermediate set
+        // Find mutual friends (intersection)
         for (int friend_id : smaller) {
             if (larger.count(friend_id)) {
-                result.mutual_ids.push_back(friend_id);
+            result.mutual_ids.push_back(friend_id);
             }
         }
 
-        // Calculate Jaccard similarity
-        int union_size = friends_1.size() + friends_2.size() - result.mutual_ids.size();
-        result.similarity_ratio = union_size == 0 ? 0.0 : (double)result.mutual_ids.size() / union_size;
+        // Calculate Jaccard similarity using the inline function
+        result.similarity_ratio = AlgoUtils::jaccard_similarity(friends_1, friends_2);
+
 
         return result;
     }

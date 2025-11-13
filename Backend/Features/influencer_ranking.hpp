@@ -37,78 +37,89 @@ public:
         : graph(social_graph), pagerank_calculator(social_graph) {}
 
     vector<InfluencerRank> get_leaderboard(
-        int top_k = 100,
-        int pagerank_iterations = 20) const
-    {
-        vector<InfluencerRank> leaderboard;
-        if (graph.getNodeCount() == 0 || top_k <= 0) {
-            return leaderboard;
-        }
+    int top_k = 10,
+    int pagerank_iterations = 20) const
+{
+    if (graph.getNodeCount() == 0 || top_k <= 0)
+        return {};
 
-        auto pagerank_scores = pagerank_calculator.calculate(0.85, pagerank_iterations);
-        leaderboard.reserve(graph.getNodeCount());
+    auto pagerank_scores = pagerank_calculator.calculate(0.85, pagerank_iterations);
 
-        for (const auto& [user_id, node] : graph.getNodes()) {
-            InfluencerRank entry;
-            entry.user_id = user_id;
-            entry.user_name = node.name;
+    // Min-heap of size <= top_k
+    auto cmp = [](const InfluencerRank& a, const InfluencerRank& b) {
+        return a.influence_score > b.influence_score;   // min-heap
+    };
 
-            auto followers = graph.getFollowers(user_id);
-            auto friends = graph.getFriends(user_id);
-            entry.friend_count = static_cast<int>(friends.size());
-            entry.total_followers = static_cast<int>(followers.size());
+    // using priority_queue to always keep the top K(required) so time complexity doesn't get sky-rocketed
+    priority_queue<
+        InfluencerRank,
+        vector<InfluencerRank>,
+        decltype(cmp)
+    > min_heap(cmp);
 
-            for (int follower_id : followers) {
-                if (!friends.count(follower_id)) {
-                    entry.fan_count++;
-                    if (entry.top_fan_ids.size() < 5) {
-                        entry.top_fan_ids.push_back(follower_id);
-                    }
-                }
+    for (const auto& [user_id, node] : graph.getNodes()) {
+        InfluencerRank entry;
+        entry.user_id = user_id;
+        entry.user_name = node.name;
+
+        auto followers = graph.getFollowers(user_id);
+        auto friends   = graph.getFriends(user_id);
+
+        entry.friend_count     = friends.size();
+        entry.total_followers  = followers.size();
+
+        for (int follower_id : followers) {
+            if (!friends.count(follower_id)) {
+                entry.fan_count++;
+                if (entry.top_fan_ids.size() < 5)
+                    entry.top_fan_ids.push_back(follower_id);
             }
-
-            entry.pagerank_score = pagerank_scores.count(user_id)
-                ? pagerank_scores[user_id]
-                : 0.0;
-
-            double follower_component = clamp_score(entry.total_followers, 1000.0) * 30.0;
-            double fan_component = clamp_score(entry.fan_count, 500.0) * 35.0;
-            double friend_component = clamp_score(entry.friend_count, 500.0) * 15.0;
-            double pagerank_component = min(25.0, entry.pagerank_score * 100.0 * 0.25);
-
-            entry.influence_score = follower_component +
-                                    fan_component +
-                                    friend_component +
-                                    pagerank_component;
-
-            leaderboard.push_back(entry);
         }
 
-        sort(leaderboard.begin(), leaderboard.end(),
-             [](const InfluencerRank& a, const InfluencerRank& b) {
-                 if (a.influence_score > b.influence_score) {
-                     return true;
-                 }
-                 if (a.influence_score < b.influence_score) {
-                     return false;
-                 }
-                 if (a.total_followers > b.total_followers) {
-                     return true;
-                 }
-                 if (a.total_followers < b.total_followers) {
-                     return false;
-                 }
-                 return a.user_id < b.user_id;
-             });
+        entry.pagerank_score = pagerank_scores.count(user_id)
+                                ? pagerank_scores.at(user_id)
+                                : 0.0;
 
-        if (leaderboard.size() > static_cast<size_t>(top_k)) {
-            leaderboard.resize(top_k);
-        }
+        double follower_component = clamp_score(entry.total_followers, 1000.0) * 30.0;
+        double fan_component      = clamp_score(entry.fan_count,      500.0) * 35.0;
+        double friend_component   = clamp_score(entry.friend_count,   500.0) * 15.0;
+        double pagerank_component = min(25.0, entry.pagerank_score * 100.0 * 0.25);
 
-        for (size_t i = 0; i < leaderboard.size(); ++i) {
-            leaderboard[i].rank = static_cast<int>(i + 1);
+        entry.influence_score = follower_component +
+                                fan_component +
+                                friend_component +
+                                pagerank_component;
+
+        // Push to heap
+        if ((int)min_heap.size() < top_k) {
+            min_heap.push(entry);
+        } else if (entry.influence_score > min_heap.top().influence_score) {
+            min_heap.pop();
+            min_heap.push(entry);
         }
+    }
+
+    // Extract top K from heap (they are unsorted)
+    vector<InfluencerRank> leaderboard;
+    leaderboard.reserve(top_k);
+    while (!min_heap.empty()) {
+        leaderboard.push_back(min_heap.top());
+        min_heap.pop();
+    }
+
+    // Now sort only top K (small cost)
+    sort(leaderboard.begin(), leaderboard.end(),
+         [](const InfluencerRank& a, const InfluencerRank& b) {
+             if (a.influence_score != b.influence_score)
+                 return a.influence_score > b.influence_score;
+             return a.user_id < b.user_id;
+         });
+
+    // Assign ranks
+        for (int i = 0; i < leaderboard.size(); i++)
+            leaderboard[i].rank = i + 1;
 
         return leaderboard;
     }
+
 };

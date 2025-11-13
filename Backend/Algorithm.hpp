@@ -151,3 +151,34 @@ struct LocalCommunityMetrics {
     vector<int> top_influencers_in_community; // Top 5 influencers nearby
 };
 
+// ============================================================================
+// UTILITY FUNCTIONS - Helper functions for common operations
+// ============================================================================
+
+
+//  the inline keyword tells the compiler to make the function call 
+// there itself rather than calling some other 
+namespace AlgoUtils {
+    /**
+     * Calculate geographic distance between two points using Haversine formula.
+     * Input: latitude and longitude in degrees
+     * Output: distance in kilometers
+     */
+    inline double calculate_haversine_distance(
+        double lat1, double lon1, 
+        double lat2, double lon2) 
+    {
+        const double EARTH_RADIUS_KM = 6371.0;
+        const double PI_OVER_180 = M_PI / 180.0;
+        
+        double lat_diff = (lat2 - lat1) * PI_OVER_180;
+        double lon_diff = (lon2 - lon1) * PI_OVER_180;
+        
+        double a = sin(lat_diff / 2) * sin(lat_diff / 2) +
+                   cos(lat1 * PI_OVER_180) * cos(lat2 * PI_OVER_180) *
+                   sin(lon_diff / 2) * sin(lon_diff / 2);
+        
+        double c = 2.0 * asin(sqrt(a));
+        return EARTH_RADIUS_KM * c;
+    }
+}

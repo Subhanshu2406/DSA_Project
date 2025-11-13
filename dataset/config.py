@@ -3,7 +3,7 @@ Configuration file for social media dataset generator.
 """
 
 # Graph parameters
-NUM_NODES = 500
+NUM_NODES = 100
 NUM_REGIONS = 8  # Geographic regions for clustering
 MIN_INTERESTS_PER_USER = 2
 MAX_INTERESTS_PER_USER = 5

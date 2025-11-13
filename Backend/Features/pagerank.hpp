@@ -62,13 +62,19 @@ public:
                 new_rank[id] = (1.0 - damping_factor) / node_count;
             }
 
-            // Add contribution from neighbors
+            // Add contribution from outgoing connections (people this user follows)
             for (const auto& [id, node] : all_nodes) {
-                int out_degree = node.neighbors.size();
+                int out_degree = node.following.size();
                 if (out_degree > 0) {
                     double contribution = rank[id] / out_degree;
-                    for (int neighbor_id : node.neighbors) {
-                        new_rank[neighbor_id] += damping_factor * contribution;
+                    for (int target_id : node.following) {
+                        new_rank[target_id] += damping_factor * contribution;
+                    }
+                } else {
+                    // Dangling node distributes rank evenly
+                    double distributed = damping_factor * rank[id] / node_count;
+                    for (auto& [target_id, _] : new_rank) {
+                        new_rank[target_id] += distributed;
                     }
                 }
             }

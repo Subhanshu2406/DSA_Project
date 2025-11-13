@@ -46,11 +46,11 @@ private:
         int internal_edges = 0;
         unordered_set<int> member_set(members.begin(), members.end());
 
-        // Count edges within community
+        // Count friend edges within community
         for (int member : members) {
-            auto neighbors = graph.getNeighbors(member);
-            for (int neighbor : neighbors) {
-                if (member_set.count(neighbor) && member < neighbor) {
+            auto friends = graph.getFriends(member);
+            for (int friend_id : friends) {
+                if (member_set.count(friend_id) && member < friend_id) {
                     internal_edges++;
                 }
             }
@@ -69,11 +69,11 @@ private:
         unordered_set<int> member_set(members.begin(), members.end());
 
         for (int member : members) {
-            auto neighbors = graph.getNeighbors(member);
-            for (int neighbor : neighbors) {
-                if (member_set.count(neighbor)) {
+            auto friends = graph.getFriends(member);
+            for (int friend_id : friends) {
+                if (member_set.count(friend_id)) {
                     // Don't double count
-                    if (member < neighbor) internal++;
+                    if (member < friend_id) internal++;
                 } else {
                     external++;
                 }
@@ -91,7 +91,7 @@ public:
      * LABEL PROPAGATION COMMUNITY DETECTION
      * 
      * Simple but effective algorithm for community detection.
-     * Each node takes the label of its most frequent neighbor.
+     * Each node takes the label of its most frequent friend.
      * 
      * Algorithm: Iterative label propagation
      * Time Complexity: O(V * avg_degree * iterations)
@@ -118,9 +118,9 @@ public:
             for (const auto& [id, node] : nodes) {
                 map<int, int> label_count; // label -> count
 
-                // Count neighboring labels
-                for (int neighbor : node.neighbors) {
-                    label_count[labels[neighbor]]++;
+                // Count friend labels
+                for (int friend_id : graph.getFriends(id)) {
+                    label_count[labels[friend_id]]++;
                 }
 
                 if (!label_count.empty()) {
@@ -200,11 +200,11 @@ public:
                     int current = q.front();
                     q.pop();
 
-                    for (int neighbor : graph.getNeighbors(current)) {
-                        if (!visited.count(neighbor)) {
-                            visited.insert(neighbor);
-                            component[neighbor] = comp_id;
-                            q.push(neighbor);
+                    for (int friend_id : graph.getFriends(current)) {
+                        if (!visited.count(friend_id)) {
+                            visited.insert(friend_id);
+                            component[friend_id] = comp_id;
+                            q.push(friend_id);
                         }
                     }
                 }

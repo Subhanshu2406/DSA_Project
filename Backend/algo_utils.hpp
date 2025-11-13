@@ -31,7 +31,8 @@ namespace AlgoUtils {
         double lat2, double lon2) 
     {
         const double EARTH_RADIUS_KM = 6371.0;
-        const double PI_OVER_180 = M_PI / 180.0;
+        const double PI = 3.14159265358979323846;
+        const double PI_OVER_180 = PI / 180.0;
         
         double lat_diff = (lat2 - lat1) * PI_OVER_180;
         double lon_diff = (lon2 - lon1) * PI_OVER_180;

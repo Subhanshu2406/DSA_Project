@@ -17,14 +17,15 @@
 #pragma once
 
 #include "graph_generator.hpp"
-#include "mutual_friends.hpp"
-#include "friend_recommender.hpp"
-#include "pagerank.hpp"
-// #include "community_detection.hpp"
-// #include "influencer_ranking.hpp"
-// #include "centrality.hpp"
-#include "short_path.hpp"
+#include "Features/mutual_friends.hpp"
+#include "Features/friend_recommender.hpp"
+#include "Features/pagerank.hpp"
+#include "Features/community_detection.hpp"
+#include "Features/influencer_ranking.hpp"
+#include "Features/centrality.hpp"
+#include "Features/short_path.hpp"
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -57,7 +58,7 @@ public:
     CommunityDetector community_detector;
     InfluencerRanker influencer_ranker;
     CentralityAnalyzer centrality_analyzer;
-    OptimizedDistanceCalculator path_calculator;
+    mutable OptimizedDistanceCalculator path_calculator;
 
 private:
     const SocialGraph& graph;
@@ -159,4 +160,3 @@ public:
     }
 };
 
-#endif // ALGORITHMS_HPP

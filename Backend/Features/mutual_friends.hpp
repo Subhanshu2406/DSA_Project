@@ -8,7 +8,7 @@
 #pragma once
 
 #include "graph_generator.hpp"
-#include "Backend/algo_utils.hpp"
+#include "algo_utils.hpp"
 #include <vector>
 
 using namespace std;
@@ -40,7 +40,7 @@ public:
      * Find all common friends between two users.
      * Shows how connected two users are in the network.
      * 
-     * Algorithm: intersection of neighbor sets
+     * Algorithm: intersection of friend sets
      * Time Complexity: O(min(deg1, deg2))
      * Space Complexity: O(min(deg1, deg2))
      * 
@@ -59,30 +59,30 @@ public:
             return result;
         }
 
-        const auto& neighbors_1 = graph.getNeighbors(user_id_1);
-        const auto& neighbors_2 = graph.getNeighbors(user_id_2);
+        const auto friends_1 = graph.getFriends(user_id_1);
+        const auto friends_2 = graph.getFriends(user_id_2);
 
-        result.total_degree_1 = neighbors_1.size();
-        result.total_degree_2 = neighbors_2.size();
+        result.total_degree_1 = friends_1.size();
+        result.total_degree_2 = friends_2.size();
 
-        // Early exit: no neighbors means no mutual friends
-        if (neighbors_1.empty() || neighbors_2.empty()) {
+        // Early exit: no friends means no mutual friends
+        if (friends_1.empty() || friends_2.empty()) {
             return result;
         }
 
         // Optimize: Intersect with smaller set first
-        const auto& smaller = neighbors_1.size() < neighbors_2.size() ? neighbors_1 : neighbors_2;
-        const auto& larger = neighbors_1.size() < neighbors_2.size() ? neighbors_2 : neighbors_1;
+        const auto& smaller = friends_1.size() < friends_2.size() ? friends_1 : friends_2;
+        const auto& larger = friends_1.size() <= friends_2.size() ? friends_2 : friends_1;
 
         // Count intersection without creating intermediate set
-        for (int neighbor : smaller) {
-            if (larger.count(neighbor)) {
-                result.mutual_ids.push_back(neighbor);
+        for (int friend_id : smaller) {
+            if (larger.count(friend_id)) {
+                result.mutual_ids.push_back(friend_id);
             }
         }
 
         // Calculate Jaccard similarity
-        int union_size = neighbors_1.size() + neighbors_2.size() - result.mutual_ids.size();
+        int union_size = friends_1.size() + friends_2.size() - result.mutual_ids.size();
         result.similarity_ratio = union_size == 0 ? 0.0 : (double)result.mutual_ids.size() / union_size;
 
         return result;

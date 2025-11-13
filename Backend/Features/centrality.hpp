@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <set>
 
 using namespace std;
 
@@ -34,23 +35,23 @@ private:
     mutable OptimizedDistanceCalculator path_calculator;
 
     /**
-     * Count triangles in neighborhood (for clustering coefficient).
-     * Optimized: only checks when nodes have sufficient neighbors.
+     * Count triangles in friend neighborhood (for clustering coefficient).
+     * Optimized: only checks when nodes have sufficient connections.
      */
-    int count_triangles_in_neighborhood(const set<int>& neighbors) const {
-        if (neighbors.size() < 2) return 0;
+    int count_triangles_in_friend_neighborhood(const set<int>& friend_ids) const {
+        if (friend_ids.size() < 2) return 0;
 
         int triangle_count = 0;
-        vector<int> neighbor_list(neighbors.begin(), neighbors.end());
+        vector<int> friend_list(friend_ids.begin(), friend_ids.end());
 
         // Only check pairs in the smaller direction for optimization
-        for (int i = 0; i < neighbor_list.size(); i++) {
-            auto neighbors_of_i = graph.getNeighbors(neighbor_list[i]);
+        for (int i = 0; i < friend_list.size(); i++) {
+            auto friends_of_i = graph.getFriends(friend_list[i]);
 
-            if (neighbors_of_i.size() == 0) continue;
+            if (friends_of_i.empty()) continue;
 
-            for (int j = i + 1; j < neighbor_list.size(); j++) {
-                if (neighbors_of_i.count(neighbor_list[j])) {
+            for (int j = i + 1; j < friend_list.size(); j++) {
+                if (friends_of_i.count(friend_list[j])) {
                     triangle_count++;
                 }
             }
@@ -84,7 +85,7 @@ public:
         metrics.user_id = user_id;
 
         // Degree centrality
-        int degree = graph.getDegree(user_id);
+        int degree = graph.getFriendCount(user_id);
         int max_possible = graph.getNodeCount() - 1;
         metrics.raw_degree = degree;
         metrics.degree_centrality = max_possible > 0 ? 
@@ -108,12 +109,12 @@ public:
         metrics.closeness_centrality = 1.0 / (1.0 + avg_distance);
 
         // Clustering coefficient: do my friends know each other?
-        auto neighbors = graph.getNeighbors(user_id);
-        if (neighbors.size() < 2) {
+        auto friends = graph.getFriends(user_id);
+        if (friends.size() < 2) {
             metrics.clustering_coefficient = 0.0;
         } else {
-            int triangle_count = count_triangles_in_neighborhood(neighbors);
-            int max_triangles = (neighbors.size() * (neighbors.size() - 1)) / 2;
+            int triangle_count = count_triangles_in_friend_neighborhood(friends);
+            int max_triangles = (friends.size() * (friends.size() - 1)) / 2;
 
             metrics.clustering_coefficient = max_triangles > 0 ? 
                 (double)triangle_count / max_triangles : 0.0;

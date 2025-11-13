@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Backend/Algorithm.hpp"
+#include "graph_generator.hpp"
 #include <iostream>
 #include <queue>
 #include <unordered_map>
@@ -131,10 +131,14 @@ private:
                     int u = q_src.front();
                     q_src.pop();
                     
-                    set<int> neighbors = graph.getNeighbors(u);
-                    for (int v : neighbors) {
+                    set<int> outgoing = graph.getFollowing(u);
+                    for (int v : outgoing) {
                         // Check if reached from other direction
                         if (dist_tgt.count(v)) {
+                            if (!parent_src.count(v)) {
+                                parent_src[v] = u;
+                                dist_src[v] = dist_src[u] + 1;
+                            }
                             meeting_node = v;
                             found = true;
                             break;
@@ -159,10 +163,14 @@ private:
                     int u = q_tgt.front();
                     q_tgt.pop();
                     
-                    set<int> neighbors = graph.getNeighbors(u);
-                    for (int v : neighbors) {
+                    set<int> outgoing = graph.getFollowing(u);
+                    for (int v : outgoing) {
                         // Check if reached from other direction
                         if (dist_src.count(v)) {
+                            if (!parent_tgt.count(v)) {
+                                parent_tgt[v] = u;
+                                dist_tgt[v] = dist_tgt[u] + 1;
+                            }
                             meeting_node = v;
                             found = true;
                             break;
@@ -221,8 +229,8 @@ private:
                 return create_success_result(path);
             }
 
-            set<int> neighbors = graph.getNeighbors(u);
-            for (int v : neighbors) {
+            set<int> outgoing = graph.getFollowing(u);
+            for (int v : outgoing) {
                 if (!dist.count(v)) {
                     dist[v] = dist[u] + 1;
                     parent[v] = u;
@@ -233,6 +241,14 @@ private:
 
         // No path found
         return create_failure_result();
+    }
+
+    PathFindResult compute_path_internal(int source_id, int target_id) const {
+        PathFindResult result = bidirectional_bfs(source_id, target_id);
+        if (!result.path_exists) {
+            result = simple_bfs(source_id, target_id);
+        }
+        return result;
     }
 
 
@@ -255,8 +271,8 @@ public:
         }
 
 
-        // Use simple BFS for guaranteed correctness
-        PathFindResult result = simple_bfs(source_id, target_id);
+        // Use bidirectional BFS with fallback to guarantee correctness
+        PathFindResult result = compute_path_internal(source_id, target_id);
         
         // Store in cache
         result_cache[key] = result;
@@ -284,16 +300,10 @@ public:
         }
 
 
-        // Compute using simple BFS
-        PathFindResult result = simple_bfs(source_id, target_id);
+        PathFindResult result = compute_path_internal(source_id, target_id);
         
-        // Store in cache
         result_cache[key] = result;
-        if (result.path_exists) {
-            cache[key] = result.path_length;
-        } else {
-            cache[key] = -1;
-        }
+        cache[key] = result.path_exists ? result.path_length : -1;
         return result.path_length;
     }
 

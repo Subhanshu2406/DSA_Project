@@ -9,7 +9,7 @@
  */
 
 #include "../Algorithm.hpp"
-#include "../Backend/graph_generator.hpp"
+#include "../graph_generator.hpp"
 #include <iostream>
 #include <cassert>
 #include <iomanip>
@@ -97,13 +97,13 @@ void setup_test_graph() {
 
     // Update these paths if your dataset folder is somewhere else.
     // From Backend/test the dataset in your tree appears at: ../dataset/data/generated/2024-01-01/...
-    const string nodesPath = "../dataset/data/generated/2024-01-01/nodes.json";
-    const string edgesPath = "../dataset/data/generated/2024-01-01/edges.json";
-    const string metaPath  = "../dataset/data/generated/2024-01-01/metadata.json";
+    const string nodesPath = "../../dataset/data/generated/2024-01-01/nodes.json";
+    const string edgesPath = "../../dataset/data/generated/2024-01-01/edges.json";
+    const string metaPath  = "../../dataset/data/generated/2024-01-01/metadata.json";
 
     if (!g.initializeGraph(nodesPath, edgesPath, metaPath)) {
         cerr << "Failed to initialize graph (check file paths and json library)\n";
-        return 1;
+        return;
     }
 
     cout << "\n📥 Test graph initialized" << endl;
@@ -141,7 +141,6 @@ void test_mutual_friends(GraphAlgorithms& engine) {
     test.assert_equal("Invalid user handled gracefully", 
                      invalid_result.similarity_ratio == 0.0);
 
-    return test;
 }
 
 void test_friend_recommender(GraphAlgorithms& engine) {
@@ -202,7 +201,6 @@ void test_friend_recommender(GraphAlgorithms& engine) {
     test.assert_equal("Invalid user returns empty", 
                      invalid_recs.empty());
 
-    return test;
 }
 
 void test_pagerank(GraphAlgorithms& engine) {
@@ -246,7 +244,6 @@ void test_pagerank(GraphAlgorithms& engine) {
         test.assert_equal("More iterations work", !ranks_50.empty());
     }
 
-    return test;
 }
 
 void test_community_detection(GraphAlgorithms& engine) {
@@ -320,7 +317,6 @@ void test_community_detection(GraphAlgorithms& engine) {
     auto communities_gm = engine.detect_communities(1, 10);
     test.assert_equal("Greedy Modularity works", !communities_gm.empty());
 
-    return test;
 }
 
 void test_influencer_ranking(GraphAlgorithms& engine) {
@@ -382,15 +378,15 @@ void test_influencer_ranking(GraphAlgorithms& engine) {
         }
         test.assert_equal("Follower counts non-negative", valid_followers);
 
-        // Test 7: Centrality scores in valid range
-        bool valid_centrality = true;
+        // Test 7: Influence scores are non-negative
+        bool influence_scores_valid = true;
         for (const auto& inf : leaderboard) {
-            if (inf.centrality_score < 0.0 || inf.centrality_score > 1.0) {
-                valid_centrality = false;
+            if (inf.influence_score < 0.0) {
+                influence_scores_valid = false;
                 break;
             }
         }
-        test.assert_equal("Centrality scores in range [0, 1]", valid_centrality);
+        test.assert_equal("Influence scores non-negative", influence_scores_valid);
 
         // Test 8: User names provided
         bool has_names = true;
@@ -407,7 +403,6 @@ void test_influencer_ranking(GraphAlgorithms& engine) {
     auto top_10 = engine.get_influencer_leaderboard(10, 20);
     test.assert_equal("Can get top 10", top_10.size() <= 10);
 
-    return test;
 }
 
 void test_centrality(GraphAlgorithms& engine) {
@@ -445,7 +440,6 @@ void test_centrality(GraphAlgorithms& engine) {
     test.assert_range("Average clustering in range [0, 1]", 
                      avg_clustering, 0.0, 1.0);
 
-    return test;
 }
 
 void test_shortest_path(GraphAlgorithms& engine) {
@@ -490,7 +484,6 @@ void test_shortest_path(GraphAlgorithms& engine) {
     auto batch_paths = engine.find_paths_batch(0, targets);
     test.assert_equal("Can batch find paths", batch_paths.size() == targets.size());
 
-    return test;
 }
 
 void test_network_statistics(GraphAlgorithms& engine) {
@@ -506,7 +499,6 @@ void test_network_statistics(GraphAlgorithms& engine) {
     test.assert_range("Average clustering in range [0, 1]", 
                      avg_clustering, 0.0, 1.0);
 
-    return test;
 }
 
 void test_integration(GraphAlgorithms& engine) {
@@ -531,7 +523,6 @@ void test_integration(GraphAlgorithms& engine) {
     test.assert_equal("Path caching works", 
                      path1.path_exists == path2.path_exists);
 
-    return test;
 }
 
 // ============================================================================
@@ -548,18 +539,19 @@ int main() {
     // Initialize graph
     try {
         SocialGraph graph;
+        const string basePath = "../../dataset/data/generated/2024-01-01";
         bool loaded = graph.initializeGraph(
-            "data/nodes.json",
-            "data/edges.json",
-            "data/metadata.json"
+            basePath + "/nodes.json",
+            basePath + "/edges.json",
+            basePath + "/metadata.json"
         );
 
         if (!loaded) {
             cerr << "\n❌ Failed to load graph data from JSON files!" << endl;
             cerr << "Make sure these files exist:" << endl;
-            cerr << "  - data/nodes.json" << endl;
-            cerr << "  - data/edges.json" << endl;
-            cerr << "  - data/metadata.json" << endl;
+            cerr << "  - " << basePath << "/nodes.json" << endl;
+            cerr << "  - " << basePath << "/edges.json" << endl;
+            cerr << "  - " << basePath << "/metadata.json" << endl;
             return 1;
         }
 

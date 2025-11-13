@@ -29,6 +29,11 @@ private:
     TrieNode* root;
     const SocialGraph* graph;
     bool isBuilt;
+
+    void resetTrie() {
+        delete root;
+        root = new TrieNode();
+    }
     
     // Helper to convert string to lowercase
     string toLower(const string& str) const {
@@ -86,7 +91,7 @@ public:
     // Build the search index from the graph
     void buildIndex(const SocialGraph& graph) {
         this->graph = &graph;
-        root = new TrieNode();  // Reset
+        resetTrie();
         isBuilt = false;
         
         const auto& nodes = graph.getNodes();

@@ -28,7 +28,9 @@ struct Node {
     int region_id;
     vector<string> interests;
     string created_at;
-    set<int> neighbors;  // Adjacency list
+    set<int> friends;    // Mutual relationships
+    set<int> followers;  // Users who follow this user (incoming edges)
+    set<int> following;  // Users this user follows (outgoing edges)
 };
 
 struct Edge {
@@ -86,6 +88,9 @@ public:
                 }
 
                 node.created_at = nodeJSON["created_at"];
+                node.friends.clear();
+                node.followers.clear();
+                node.following.clear();
                 nodes[node.user_id] = node;
             }
 
@@ -141,11 +146,21 @@ public:
 
                 edges.push_back(edge);
 
-                // Update adjacency list - only if both nodes exist
+                // Update directional relationship caches when both nodes exist
                 if (nodes.find(edge.source) != nodes.end() && 
                     nodes.find(edge.target) != nodes.end()) {
-                    nodes[edge.source].neighbors.insert(edge.target);
-                    nodes[edge.target].neighbors.insert(edge.source);
+                    Node& sourceNode = nodes[edge.source];
+                    Node& targetNode = nodes[edge.target];
+
+                    sourceNode.following.insert(edge.target);
+                    targetNode.followers.insert(edge.source);
+
+                    if (edge.relationship_type == "friend") {
+                        sourceNode.friends.insert(edge.target);
+                        targetNode.friends.insert(edge.source);
+                        sourceNode.followers.insert(edge.target);
+                        targetNode.following.insert(edge.source);
+                    }
                 }
             }
 
@@ -207,7 +222,7 @@ public:
     // Update graph with new data (CALL THIS DAILY FROM FRONTEND)
     // How it works:
     // 1. Stores backup of current state in case update fails
-    // 2. Clears adjacency lists in all nodes (neighbors set)
+    // 2. Clears relationship caches in all nodes (friends/followers/following)
     // 3. Loads new nodes - NEW NODES are added, EXISTING nodes are updated
     // 4. Loads new edges - rebuilds all adjacency relationships
     // 5. If any step fails, restores from backup (transaction-like behavior)
@@ -223,9 +238,11 @@ public:
         auto metadataBackup = metadata;
 
         try {
-            // Clear neighbors but keep nodes - for fresh rebuild
+            // Clear relationship caches but keep nodes - for fresh rebuild
             for (auto& [id, node] : nodes) {
-                node.neighbors.clear();
+                node.friends.clear();
+                node.followers.clear();
+                node.following.clear();
             }
 
             // Load new data
@@ -285,14 +302,35 @@ public:
         return result;
     }
 
-    set<int> getNeighbors(int user_id) const {
+    set<int> getFriends(int user_id) const {
         const auto* node = getNode(user_id);
-        return node ? node->neighbors : set<int>();
+        return node ? node->friends : set<int>();
     }
 
-    int getDegree(int user_id) const {
+    set<int> getFollowers(int user_id) const {
         const auto* node = getNode(user_id);
-        return node ? node->neighbors.size() : 0;
+        return node ? node->followers : set<int>();
+    }
+
+    set<int> getFollowing(int user_id) const {
+        const auto* node = getNode(user_id);
+        return node ? node->following : set<int>();
+    }
+
+    /**
+     * Convenience helper for traversals: all outgoing connections
+     * (friends already included because friendship implies following).
+     */
+    set<int> getReachableConnections(int user_id) const {
+        const auto* node = getNode(user_id);
+        if (!node) return {};
+        set<int> reachable = node->following;
+        return reachable;
+    }
+    
+    int getFriendCount(int user_id) const {
+        const auto* node = getNode(user_id);
+        return node ? node->friends.size() : 0;
     }
 
     const unordered_map<int, Node>& getNodes() const {

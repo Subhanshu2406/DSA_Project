@@ -1,6 +1,13 @@
+// include/Backend/user_search.hpp
+/*
+ * USER SEARCH INDEX (AUTOCOMPLETE)
+ * =================================
+ * Efficient prefix-based user search using Trie data structure.
+ */
+
 #pragma once
 
-#include "graph_generator.hpp"
+#include "../graph_generator.hpp"
 #include <vector>
 #include <unordered_map>
 #include <string>

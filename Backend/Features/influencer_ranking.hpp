@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graph_generator.hpp"
+#include "../graph_generator.hpp"
 #include "pagerank.hpp"
 #include <vector>
 #include <algorithm>

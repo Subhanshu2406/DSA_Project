@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "graph_generator.hpp"
-#include "algo_utils.hpp"
+#include "../graph_generator.hpp"
+#include "../algo_utils.hpp"
 #include <vector>
 
 using namespace std;

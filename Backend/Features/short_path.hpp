@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graph_generator.hpp"
+#include "../graph_generator.hpp"
 #include <iostream>
 #include <queue>
 #include <unordered_map>

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "graph_generator.hpp"
+#include "../graph_generator.hpp"
 #include <map>
 #include <vector>
 

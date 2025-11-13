@@ -1,5 +1,6 @@
 #pragma once
-#include "graphgen.hpp"
+
+#include "Backend/Algorithm.hpp"
 #include <iostream>
 #include <queue>
 #include <unordered_map>

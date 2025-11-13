@@ -17,16 +17,19 @@
 
 #pragma once
 
+#include "Backend/Utils.hpp"
 #include "Backend/graph_generator.hpp"
 #include <queue>
 #include <stack>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <limits>
+#include <set>
 
+using namespace std;
 // ============================================================================
 // RESULT DATA STRUCTURES - Used for returning algorithm outputs to frontend
 // ============================================================================
@@ -151,34 +154,102 @@ struct LocalCommunityMetrics {
     vector<int> top_influencers_in_community; // Top 5 influencers nearby
 };
 
-// ============================================================================
-// UTILITY FUNCTIONS - Helper functions for common operations
-// ============================================================================
-
 
 //  the inline keyword tells the compiler to make the function call 
 // there itself rather than calling some other 
-namespace AlgoUtils {
+
+
+// ============================================================================
+// MAIN ALGORITHMS CLASS
+// ============================================================================
+
+/**
+ * GRAPH ALGORITHMS ENGINE
+ * =======================
+ * Central class containing all graph analysis algorithms.
+ * 
+ * Usage:
+ *   SocialGraph graph;
+ *   graph.initializeGraph(nodes_path, edges_path, metadata_path);
+ *   GraphAlgorithms engine(graph);
+ *   auto recommendations = engine.get_friend_recommendations(user_id, 10);
+ */
+class GraphAlgorithms {
+private:
+    // Reference to the graph (no copy, just reference)
+    const SocialGraph& graph;
+
+    // ========== PRIVATE HELPER METHODS ==========
+
     /**
-     * Calculate geographic distance between two points using Haversine formula.
-     * Input: latitude and longitude in degrees
-     * Output: distance in kilometers
+     * Breadth-first search traversal starting from a node.
+     * Used internally for path finding and graph exploration.
      */
-    inline double calculate_haversine_distance(
-        double lat1, double lon1, 
-        double lat2, double lon2) 
-    {
-        const double EARTH_RADIUS_KM = 6371.0;
-        const double PI_OVER_180 = M_PI / 180.0;
-        
-        double lat_diff = (lat2 - lat1) * PI_OVER_180;
-        double lon_diff = (lon2 - lon1) * PI_OVER_180;
-        
-        double a = sin(lat_diff / 2) * sin(lat_diff / 2) +
-                   cos(lat1 * PI_OVER_180) * cos(lat2 * PI_OVER_180) *
-                   sin(lon_diff / 2) * sin(lon_diff / 2);
-        
-        double c = 2.0 * asin(sqrt(a));
-        return EARTH_RADIUS_KM * c;
+
+    vector<int> bfs(int start_node_id) const {
+        vector<int> visited_order;
+        auto meta = graph.getMetadata();
+
+        visited_order.reserve(meta.total_nodes);  // minor optimization
+
+        unordered_set<int> visited;
+        visited.reserve(meta.total_nodes);        // avoids rehashing
+
+        queue<int> q;
+
+        q.push(start_node_id);
+        visited.insert(start_node_id);
+
+        while (!q.empty()) {
+            int u = q.front(); 
+            q.pop();
+
+            visited_order.push_back(u);
+
+            for (int v : graph.getNeighbors(u)) {
+                if (visited.find(v) == visited.end()) {
+                    visited.insert(v);
+                    q.push(v);
+                }
+            }
+        }
+        return visited_order;
     }
-}
+
+
+    /**
+     * Depth-first search traversal - alternative to BFS.
+     * Used for connected components analysis.
+     */
+    void depth_first_search_recursive(
+
+        int current_node_id,
+        unordered_set<int>& visited,
+        vector<int>& result_path) const 
+        {
+            visited.insert(current_node_id);
+            result_path.push_back(current_node_id);
+
+            for (int neighbor_id : graph.getNeighbors(current_node_id)) {
+                if (visited.find(neighbor_id) == visited.end()) {
+                depth_first_search_recursive(neighbor_id, visited, result_path);
+            }
+        }   
+    }
+
+    vector<int> dfs(int start_node_id) const {
+        vector<int> result_path;
+        auto meta = graph.getMetadata();
+
+        result_path.reserve(meta.total_nodes);
+
+        unordered_set<int> visited;
+        visited.reserve(meta.total_nodes);
+
+        depth_first_search_recursive(start_node_id, visited, result_path);
+
+        return result_path;
+    }
+
+
+ 

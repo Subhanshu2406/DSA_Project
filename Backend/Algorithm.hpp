@@ -25,6 +25,7 @@
 #include "Features/centrality.hpp"
 #include "Features/short_path.hpp"
 #include "Features/user_search.hpp"
+#include "Features/friendshipscore.hpp"
 #include <vector>
 #include <map>
 
@@ -61,6 +62,7 @@ public:
     CentralityAnalyzer centrality_analyzer;
     mutable OptimizedDistanceCalculator path_calculator;
     mutable UserSearchIndex user_search;
+    mutable FriendshipScoreCalculator friendship_score_calculator;
 
 private:
     const SocialGraph& graph;
@@ -79,7 +81,8 @@ public:
           influencer_ranker(social_graph),
           centrality_analyzer(social_graph),
           path_calculator(social_graph),
-          user_search() {
+          user_search(),
+          friendship_score_calculator(social_graph) {
         // Build search index on construction
         user_search.buildIndex(social_graph);
     }
@@ -178,6 +181,11 @@ public:
 
     bool is_search_ready() const {
         return user_search.isReady();
+    }
+
+    // Friendship Score
+    FriendshipScoreResult calculate_friendship_score(int node1, int node2) const {
+        return friendship_score_calculator.calculateScore(node1, node2);
     }
 };
 

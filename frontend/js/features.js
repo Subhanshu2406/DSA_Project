@@ -253,6 +253,20 @@ function displayLeaderboard(leaderboard) {
                     if (window.clearHighlights) clearHighlights();
                     window.highlightNodes([userId], 'selected');
                     window.network.selectNodes([userId.toString()]);
+                    // Show label for selected node
+                    if (window.nodes) {
+                        const node = window.nodes.get(userId.toString());
+                        if (node) {
+                            window.nodes.update({
+                                id: userId.toString(),
+                                font: {
+                                    size: 14,
+                                    face: 'Arial',
+                                    color: '#2c3e50'
+                                }
+                            });
+                        }
+                    }
                     window.network.focus(userId.toString(), {
                         scale: 1.5,
                         animation: {
@@ -411,6 +425,20 @@ function displayRecommendations(recommendations) {
                     if (window.clearHighlights) clearHighlights();
                     window.highlightNodes([userId], 'selected');
                     window.network.selectNodes([userId.toString()]);
+                    // Show label for selected node
+                    if (window.nodes) {
+                        const node = window.nodes.get(userId.toString());
+                        if (node) {
+                            window.nodes.update({
+                                id: userId.toString(),
+                                font: {
+                                    size: 14,
+                                    face: 'Arial',
+                                    color: '#2c3e50'
+                                }
+                            });
+                        }
+                    }
                     window.network.focus(userId.toString(), {
                         scale: 1.5,
                         animation: {

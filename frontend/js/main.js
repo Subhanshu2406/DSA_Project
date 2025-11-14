@@ -52,9 +52,9 @@ async function initializeGraph() {
                         border: '#c0392b'
                     }
                 },
-                size: Math.max(20, Math.min(60, 20 + (node.data.degree || 0) * 0.5)),
+                size: Math.max(15, Math.min(35, 15 + (node.data.degree || 0) * 0.2)),
                 font: {
-                    size: 14,
+                    size: 0,  // Hide labels initially - show on hover/click
                     color: '#2c3e50',
                     face: 'Arial'
                 },
@@ -72,19 +72,20 @@ async function initializeGraph() {
                     to: edge.data.target,
                     arrows: {
                         to: {
-                            enabled: true,
-                            scaleFactor: 0.8
+                            enabled: false  // Disabled to reduce clutter
                         }
                     },
                     color: {
                         color: edgeColor,
                         highlight: '#f39c12',
-                        hover: '#f39c12'
+                        hover: '#f39c12',
+                        opacity: 0.25  // Start with translucent edges
                     },
-                    width: edge.data.relationship_type === 'friend' ? 3 : 2,
+                    width: edge.data.relationship_type === 'friend' ? 2 : 1.5,
                     relationship_type: edge.data.relationship_type,
                     smooth: {
-                        type: 'continuous',
+                        enabled: true,
+                        type: 'discrete',
                         roundness: 0.5
                     }
                 };
@@ -100,43 +101,46 @@ async function initializeGraph() {
             edges: visEdges
         };
         
-        // Configure options
+        // Configure options - optimized for dense graphs
         const options = {
             nodes: {
                 shape: 'dot',
                 font: {
-                    size: 14,
-                    face: 'Arial'
+                    size: 0,  // Hide labels initially to reduce clutter
+                    face: 'Arial',
+                    color: '#2c3e50'
                 },
                 borderWidth: 2,
-                shadow: true
+                shadow: true,
+                size: 20
             },
             edges: {
                 arrows: {
                     to: {
-                        enabled: true,
-                        scaleFactor: 0.8
+                        enabled: false  // Turn off arrows to reduce clutter
                     }
                 },
                 smooth: {
-                    type: 'continuous',
+                    enabled: true,
+                    type: 'discrete',
                     roundness: 0.5
                 },
-                shadow: true
+                shadow: false,
+                width: 1.5
             },
             physics: {
                 enabled: true,
                 barnesHut: {
-                    gravitationalConstant: -2000,
+                    gravitationalConstant: -20000,  // Higher repulsion for better spacing
                     centralGravity: 0.1,
-                    springLength: 150,
-                    springConstant: 0.04,
+                    springLength: 200,  // Increased spring length
+                    springConstant: 0.01,  // Lower spring constant
                     damping: 0.09,
-                    avoidOverlap: 0.5
+                    avoidOverlap: 1  // Maximum overlap avoidance
                 },
                 stabilization: {
                     enabled: true,
-                    iterations: 200,
+                    iterations: 150,
                     fit: true
                 }
             },
@@ -145,7 +149,8 @@ async function initializeGraph() {
                 tooltipDelay: 200,
                 zoomView: true,
                 dragView: true,
-                selectConnectedEdges: true
+                selectConnectedEdges: true,
+                hoverConnectedEdges: true
             },
             layout: {
                 improvedLayout: true,
@@ -164,6 +169,15 @@ async function initializeGraph() {
                 const nodeId = params.nodes[0];
                 const nodeData = visNodes.get(nodeId);
                 if (nodeData && nodeData.user_id) {
+                    // Show label for clicked node
+                    visNodes.update({
+                        id: nodeId,
+                        font: {
+                            size: 14,
+                            face: 'Arial',
+                            color: '#2c3e50'
+                        }
+                    });
                     showNodeDetails(nodeData.user_id);
                 }
             } else if (params.edges.length > 0) {
@@ -173,13 +187,116 @@ async function initializeGraph() {
             }
         });
         
-        // Node hover handler
+        // Node hover handler - show label on hover and highlight connected edges
         network.on('hoverNode', function(params) {
             container.style.cursor = 'pointer';
+            const nodeId = params.node;
+            const node = visNodes.get(nodeId);
+            if (node) {
+                // Show label on hover
+                visNodes.update({
+                    id: nodeId,
+                    font: {
+                        size: 14,
+                        face: 'Arial',
+                        color: '#2c3e50'
+                    }
+                });
+                
+                // Highlight connected edges brightly
+                const connectedEdges = network.getConnectedEdges(nodeId);
+                const allEdges = edges.get();
+                
+                allEdges.forEach(edge => {
+                    if (connectedEdges.includes(edge.id)) {
+                        // Bright highlight for connected edges
+                        edges.update({
+                            id: edge.id,
+                            color: {
+                                color: '#f39c12',
+                                highlight: '#f39c12',
+                                hover: '#f39c12',
+                                opacity: 1.0
+                            },
+                            width: 4
+                        });
+                    } else {
+                        // Make other edges more translucent
+                        const edgeColor = edge.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
+                        edges.update({
+                            id: edge.id,
+                            color: {
+                                color: edgeColor,
+                                highlight: '#f39c12',
+                                hover: '#f39c12',
+                                opacity: 0.15
+                            },
+                            width: edge.relationship_type === 'friend' ? 1.5 : 1
+                        });
+                    }
+                });
+            }
         });
         
         network.on('blurNode', function(params) {
             container.style.cursor = 'default';
+            const nodeId = params.node;
+            // Hide label when not hovering
+            visNodes.update({
+                id: nodeId,
+                font: {
+                    size: 0
+                }
+            });
+            
+            // Restore all edges to default translucent state
+            const allEdges = edges.get();
+            allEdges.forEach(edge => {
+                const edgeColor = edge.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
+                edges.update({
+                    id: edge.id,
+                    color: {
+                        color: edgeColor,
+                        highlight: '#f39c12',
+                        hover: '#f39c12',
+                        opacity: 0.25
+                    },
+                    width: edge.relationship_type === 'friend' ? 2 : 1.5
+                });
+            });
+        });
+        
+        // Edge hover handler - highlight edge when directly hovered
+        network.on('hoverEdge', function(params) {
+            const edgeId = params.edge;
+            edges.update({
+                id: edgeId,
+                color: {
+                    color: '#f39c12',
+                    highlight: '#f39c12',
+                    hover: '#f39c12',
+                    opacity: 1.0
+                },
+                width: 4
+            });
+        });
+        
+        network.on('blurEdge', function(params) {
+            const edgeId = params.edge;
+            const edge = edges.get(edgeId);
+            if (edge) {
+                const edgeColor = edge.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
+                edges.update({
+                    id: edgeId,
+                    color: {
+                        color: edgeColor,
+                        highlight: '#f39c12',
+                        hover: '#f39c12',
+                        opacity: 0.25
+                    },
+                    width: edge.relationship_type === 'friend' ? 2 : 1.5
+                });
+            }
         });
         
         // Selection change handler
@@ -303,6 +420,9 @@ function applyCommunityColors(communities) {
                             background: comm.color,
                             border: comm.color
                         }
+                    },
+                    font: {
+                        size: 0  // Keep labels hidden for community colors
                     }
                 });
             }
@@ -328,11 +448,14 @@ function clearHighlights() {
                     border: '#c0392b'
                 }
             },
-            borderWidth: 2
+            borderWidth: 2,
+            font: {
+                size: 0  // Hide labels when clearing highlights
+            }
         });
     });
     
-    // Reset all edges to default
+    // Reset all edges to default translucent state
     const allEdges = edges.get();
     allEdges.forEach(edge => {
         const edgeColor = edge.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
@@ -341,9 +464,10 @@ function clearHighlights() {
             color: {
                 color: edgeColor,
                 highlight: '#f39c12',
-                hover: '#f39c12'
+                hover: '#f39c12',
+                opacity: 0.25
             },
-            width: edge.relationship_type === 'friend' ? 3 : 2
+            width: edge.relationship_type === 'friend' ? 2 : 1.5
         });
     });
     

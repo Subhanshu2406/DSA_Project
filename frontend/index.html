@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Graph Visualization</title>
     <link rel="stylesheet" href="css/styles.css">
-    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         body, html {
             margin: 0;
@@ -47,8 +47,8 @@
                 </div>
             </div>
 
-            <!-- Center - Cytoscape Canvas -->
-            <div id="cy" class="cytoscape-container"></div>
+            <!-- Center - Graph Canvas -->
+            <div id="cy" class="graph-container"></div>
 
             <!-- Right Sidebar - Feature Results -->
             <div id="featureResultsPanel" class="sidebar right-sidebar">

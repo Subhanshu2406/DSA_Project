@@ -1,6 +1,6 @@
 # Social Graph Visualization Frontend
 
-A web-based visualization tool for exploring social network graphs using Cytoscape.js.
+A web-based visualization tool for exploring social network graphs using vis-network.
 
 ## Features
 
@@ -82,7 +82,7 @@ frontend/
 ├── css/
 │   └── styles.css      # All styling
 ├── js/
-│   ├── main.js         # Cytoscape initialization
+│   ├── main.js         # vis-network initialization
 │   ├── api.js          # API client functions
 │   ├── search.js       # Search and autocomplete
 │   ├── features.js     # Feature button handlers

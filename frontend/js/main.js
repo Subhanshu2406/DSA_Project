@@ -1,11 +1,13 @@
-// Main Cytoscape.js initialization and core logic
+// Main vis-network initialization and core logic
 
-let cy;
+let network = null;
+let nodes = null;
+let edges = null;
 let selectedNodes = [];
 let communityColors = {};
 
-// Initialize Cytoscape
-async function initializeCytoscape() {
+// Initialize vis-network
+async function initializeGraph() {
     try {
         console.log('Loading graph data...');
         // Load graph data
@@ -18,21 +20,10 @@ async function initializeCytoscape() {
             throw new Error('No nodes found in graph data');
         }
         
-        // Prepare elements array
-        const elements = [];
-        if (graphData.nodes) {
-            elements.push(...graphData.nodes);
-        }
-        if (graphData.edges) {
-            elements.push(...graphData.edges);
-        }
-        
-        console.log('Total elements:', elements.length);
-        
-        // Check if container exists and has dimensions
+        // Check if container exists
         const container = document.getElementById('cy');
         if (!container) {
-            throw new Error('Cytoscape container not found');
+            throw new Error('Graph container not found');
         }
         
         // Ensure container is visible
@@ -40,200 +31,183 @@ async function initializeCytoscape() {
         container.style.height = '100%';
         container.style.minHeight = '400px';
         
-        // Initialize Cytoscape
-        cy = cytoscape({
-            container: container,
-            
-            elements: elements,
-            
-            style: [
-                {
-                    selector: 'node',
-                    style: {
-                        'background-color': '#3498db',
-                        'label': 'data(label)',
-                        'width': 30,
-                        'height': 30,
-                        'font-size': '12px',
-                        'text-valign': 'center',
-                        'text-halign': 'center',
-                        'text-outline-width': 2,
-                        'text-outline-color': '#fff',
-                        'color': '#2c3e50',
-                        'overlay-padding': '6px',
-                        'border-width': 2,
-                        'border-color': '#fff'
+        // Convert API format to vis-network format
+        const visNodes = new vis.DataSet(
+            graphData.nodes.map(node => ({
+                id: node.data.id,
+                label: node.data.label || node.data.name || node.data.user_id.toString(),
+                user_id: node.data.user_id,
+                name: node.data.name,
+                degree: node.data.degree || 0,
+                followers: node.data.followers || 0,
+                following: node.data.following || 0,
+                region_id: node.data.region_id,
+                interests: node.data.interests || [],
+                location: node.data.location || [],
+                color: {
+                    background: '#3498db',
+                    border: '#2980b9',
+                    highlight: {
+                        background: '#e74c3c',
+                        border: '#c0392b'
                     }
                 },
-                {
-                    selector: 'node[degree]',
-                    style: {
-                        'width': 'mapData(degree, 0, 100, 20, 60)',
-                        'height': 'mapData(degree, 0, 100, 20, 60)'
+                size: Math.max(20, Math.min(60, 20 + (node.data.degree || 0) * 0.5)),
+                font: {
+                    size: 14,
+                    color: '#2c3e50',
+                    face: 'Arial'
+                },
+                borderWidth: 2,
+                borderWidthSelected: 4
+            }))
+        );
+        
+        const visEdges = new vis.DataSet(
+            graphData.edges.map(edge => {
+                const edgeColor = edge.data.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
+                return {
+                    id: edge.data.id,
+                    from: edge.data.source,
+                    to: edge.data.target,
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 0.8
+                        }
+                    },
+                    color: {
+                        color: edgeColor,
+                        highlight: '#f39c12',
+                        hover: '#f39c12'
+                    },
+                    width: edge.data.relationship_type === 'friend' ? 3 : 2,
+                    relationship_type: edge.data.relationship_type,
+                    smooth: {
+                        type: 'continuous',
+                        roundness: 0.5
+                    }
+                };
+            })
+        );
+        
+        nodes = visNodes;
+        edges = visEdges;
+        
+        // Create data object
+        const data = {
+            nodes: visNodes,
+            edges: visEdges
+        };
+        
+        // Configure options
+        const options = {
+            nodes: {
+                shape: 'dot',
+                font: {
+                    size: 14,
+                    face: 'Arial'
+                },
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 0.8
                     }
                 },
-                {
-                    selector: 'node.selected',
-                    style: {
-                        'background-color': '#e74c3c',
-                        'border-width': 4,
-                        'border-color': '#c0392b'
-                    }
+                smooth: {
+                    type: 'continuous',
+                    roundness: 0.5
                 },
-                {
-                    selector: 'node.highlighted',
-                    style: {
-                        'background-color': '#f39c12',
-                        'border-width': 3,
-                        'border-color': '#e67e22'
-                    }
+                shadow: true
+            },
+            physics: {
+                enabled: true,
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.1,
+                    springLength: 150,
+                    springConstant: 0.04,
+                    damping: 0.09,
+                    avoidOverlap: 0.5
                 },
-                {
-                    selector: 'node.mutual-friend',
-                    style: {
-                        'background-color': '#9b59b6',
-                        'border-color': '#8e44ad'
-                    }
-                },
-                {
-                    selector: 'edge',
-                    style: {
-                        'width': 2,
-                        'line-color': '#95a5a6',
-                        'target-arrow-color': '#95a5a6',
-                        'target-arrow-shape': 'triangle',
-                        'curve-style': 'bezier',
-                        'opacity': 0.6
-                    }
-                },
-                {
-                    selector: 'edge[relationship_type = "friend"]',
-                    style: {
-                        'line-color': '#3498db',
-                        'target-arrow-color': '#3498db',
-                        'width': 3
-                    }
-                },
-                {
-                    selector: 'edge[relationship_type = "fan"]',
-                    style: {
-                        'line-color': '#e74c3c',
-                        'target-arrow-color': '#e74c3c',
-                        'width': 2
-                    }
-                },
-                {
-                    selector: 'edge.highlighted',
-                    style: {
-                        'width': 4,
-                        'opacity': 1,
-                        'line-color': '#f39c12',
-                        'target-arrow-color': '#f39c12'
-                    }
-                },
-                {
-                    selector: 'edge.path-edge',
-                    style: {
-                        'width': 5,
-                        'opacity': 1,
-                        'line-color': '#27ae60',
-                        'target-arrow-color': '#27ae60'
-                    }
+                stabilization: {
+                    enabled: true,
+                    iterations: 200,
+                    fit: true
                 }
-            ],
-            
-            layout: (() => {
-                // Use simpler layout for very large graphs
-                const nodeCount = graphData.nodes ? graphData.nodes.length : 0;
-                if (nodeCount > 1000) {
-                    console.log('Using grid layout for large graph');
-                    return {
-                        name: 'grid',
-                        fit: true,
-                        padding: 30,
-                        animate: false
-                    };
-                } else if (nodeCount > 500) {
-                    console.log('Using breadthfirst layout for medium graph');
-                    return {
-                        name: 'breadthfirst',
-                        fit: true,
-                        padding: 30,
-                        animate: false,
-                        directed: false
-                    };
-                } else {
-                    console.log('Using COSE layout');
-                    return {
-                        name: 'cose',
-                        idealEdgeLength: 100,
-                        nodeOverlap: 20,
-                        refresh: 20,
-                        fit: true,
-                        padding: 30,
-                        randomize: true,
-                        componentSpacing: 100,
-                        nodeRepulsion: 4000,
-                        edgeElasticity: 100,
-                        nestingFactor: 5,
-                        gravity: 0.25,
-                        numIter: 1000,
-                        initialTemp: 200,
-                        coolingFactor: 0.95,
-                        minTemp: 1.0,
-                        animate: true,
-                        animationDuration: 1000,
-                        animationEasing: 'ease-out'
-                    };
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200,
+                zoomView: true,
+                dragView: true,
+                selectConnectedEdges: true
+            },
+            layout: {
+                improvedLayout: true,
+                hierarchical: {
+                    enabled: false
                 }
-            })()
-        });
-
+            }
+        };
+        
+        // Initialize network
+        network = new vis.Network(container, data, options);
+        
         // Node click handler
-        cy.on('tap', 'node', async function(evt) {
-            const node = evt.target;
-            const nodeId = parseInt(node.id());
-            
-            // Clear previous selection
-            cy.elements().removeClass('selected');
-            node.addClass('selected');
-            
-            // Show node details
-            if (window.showNodeDetails) {
-                showNodeDetails(nodeId);
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const nodeData = visNodes.get(nodeId);
+                if (nodeData && nodeData.user_id) {
+                    showNodeDetails(nodeData.user_id);
+                }
+            } else if (params.edges.length > 0) {
+                const edgeId = params.edges[0];
+                const edgeData = visEdges.get(edgeId);
+                console.log('Edge clicked:', edgeData);
             }
         });
-
-        // Edge click handler
-        cy.on('tap', 'edge', function(evt) {
-            const edge = evt.target;
-            const sourceId = edge.source().id();
-            const targetId = edge.target().id();
-            const relationshipType = edge.data('relationship_type');
-            
-            // Show edge info in console or side panel
-            console.log(`Edge: ${sourceId} -> ${targetId}, Type: ${relationshipType}`);
+        
+        // Node hover handler
+        network.on('hoverNode', function(params) {
+            container.style.cursor = 'pointer';
         });
-
-        // Pan and zoom controls
-        cy.userPanningEnabled(true);
-        cy.boxSelectionEnabled(true);
-        cy.zoomingEnabled(true);
-        cy.minZoom(0.1);
-        cy.maxZoom(2);
-
-        console.log('Cytoscape initialized with', graphData.nodes.length, 'nodes and', graphData.edges.length, 'edges');
         
-        // Expose cy to window for other scripts
-        window.cy = cy;
+        network.on('blurNode', function(params) {
+            container.style.cursor = 'default';
+        });
         
-        // Force a layout refresh
-        setTimeout(() => {
-            cy.fit();
-            cy.center();
-        }, 100);
+        // Selection change handler
+        network.on('select', function(params) {
+            if (params.nodes.length > 0) {
+                selectedNodes = params.nodes;
+            }
+        });
+        
+        // Stabilization complete handler
+        network.on('stabilizationEnd', function() {
+            console.log('Graph stabilization complete');
+            network.fit({
+                animation: {
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+        });
+        
+        // Expose network to window for other scripts
+        window.network = network;
+        window.nodes = nodes;
+        window.edges = edges;
+        
+        console.log('vis-network initialized with', graphData.nodes.length, 'nodes and', graphData.edges.length, 'edges');
     } catch (error) {
-        console.error('Error initializing Cytoscape:', error);
+        console.error('Error initializing graph:', error);
         const errorMsg = error.message || 'Unknown error';
         document.getElementById('cy').innerHTML = `
             <div style="padding: 20px; text-align: center; color: #e74c3c;">
@@ -264,37 +238,73 @@ async function showNodeDetails(nodeId) {
 
 // Highlight nodes
 function highlightNodes(nodeIds, className = 'highlighted') {
-    if (!cy) return;
-    cy.elements().removeClass(className);
+    if (!network || !nodes) return;
+    
+    const highlightColor = className === 'mutual-friend' ? '#9b59b6' : 
+                          className === 'selected' ? '#e74c3c' : '#f39c12';
+    
     nodeIds.forEach(id => {
-        const node = cy.getElementById(id.toString());
-        if (node.length > 0) {
-            node.addClass(className);
+        const node = nodes.get(id.toString());
+        if (node) {
+            nodes.update({
+                id: id.toString(),
+                color: {
+                    background: highlightColor,
+                    border: highlightColor === '#9b59b6' ? '#8e44ad' : 
+                           highlightColor === '#e74c3c' ? '#c0392b' : '#e67e22',
+                    highlight: {
+                        background: highlightColor,
+                        border: highlightColor === '#9b59b6' ? '#8e44ad' : 
+                               highlightColor === '#e74c3c' ? '#c0392b' : '#e67e22'
+                    }
+                },
+                borderWidth: 4
+            });
         }
     });
 }
 
 // Highlight edges
 function highlightEdges(edgeIds, className = 'highlighted') {
-    if (!cy) return;
-    cy.elements('edge').removeClass(className);
+    if (!network || !edges) return;
+    
+    const highlightColor = className === 'path-edge' ? '#27ae60' : '#f39c12';
+    
     edgeIds.forEach(id => {
-        const edge = cy.getElementById(id);
-        if (edge.length > 0) {
-            edge.addClass(className);
+        const edge = edges.get(id);
+        if (edge) {
+            edges.update({
+                id: id,
+                color: {
+                    color: highlightColor,
+                    highlight: highlightColor,
+                    hover: highlightColor
+                },
+                width: 5
+            });
         }
     });
 }
 
 // Apply community colors
 function applyCommunityColors(communities) {
-    if (!cy) return;
+    if (!network || !nodes) return;
+    
     communities.forEach(comm => {
         comm.member_ids.forEach(memberId => {
-            const node = cy.getElementById(memberId.toString());
-            if (node.length > 0) {
-                node.style('background-color', comm.color);
-                node.data('community', comm.community_id);
+            const node = nodes.get(memberId.toString());
+            if (node) {
+                nodes.update({
+                    id: memberId.toString(),
+                    color: {
+                        background: comm.color,
+                        border: comm.color,
+                        highlight: {
+                            background: comm.color,
+                            border: comm.color
+                        }
+                    }
+                });
             }
         });
         communityColors[comm.community_id] = comm.color;
@@ -303,17 +313,54 @@ function applyCommunityColors(communities) {
 
 // Clear all highlights
 function clearHighlights() {
-    if (!cy) return;
-    cy.elements().removeClass('selected', 'highlighted', 'mutual-friend', 'path-edge');
-    cy.elements('node').style('background-color', '#3498db');
+    if (!network || !nodes || !edges) return;
+    
+    // Reset all nodes to default color
+    const allNodes = nodes.get();
+    allNodes.forEach(node => {
+        nodes.update({
+            id: node.id,
+            color: {
+                background: '#3498db',
+                border: '#2980b9',
+                highlight: {
+                    background: '#e74c3c',
+                    border: '#c0392b'
+                }
+            },
+            borderWidth: 2
+        });
+    });
+    
+    // Reset all edges to default
+    const allEdges = edges.get();
+    allEdges.forEach(edge => {
+        const edgeColor = edge.relationship_type === 'friend' ? '#3498db' : '#e74c3c';
+        edges.update({
+            id: edge.id,
+            color: {
+                color: edgeColor,
+                highlight: '#f39c12',
+                hover: '#f39c12'
+            },
+            width: edge.relationship_type === 'friend' ? 3 : 2
+        });
+    });
+    
+    // Clear selection
+    network.unselectAll();
 }
 
 // Reset view
 function resetView() {
-    if (!cy) return;
+    if (!network) return;
     clearHighlights();
-    cy.fit();
-    cy.center();
+    network.fit({
+        animation: {
+            duration: 1000,
+            easingFunction: 'easeInOutQuad'
+        }
+    });
     document.getElementById('nodeDetailsPanel').classList.add('hidden');
     document.getElementById('featureResultsPanel').classList.add('hidden');
 }
@@ -321,22 +368,20 @@ function resetView() {
 // Close node details panel
 document.getElementById('closeNodeDetails').addEventListener('click', () => {
     document.getElementById('nodeDetailsPanel').classList.add('hidden');
-    if (cy) {
-        cy.elements().removeClass('selected');
+    if (network) {
+        network.unselectAll();
     }
 });
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeCytoscape();
+    initializeGraph();
 });
 
 // Export functions for use in other modules
-// cy is already assigned to window.cy in initializeCytoscape()
 window.highlightNodes = highlightNodes;
 window.highlightEdges = highlightEdges;
 window.applyCommunityColors = applyCommunityColors;
 window.clearHighlights = clearHighlights;
 window.resetView = resetView;
 window.showNodeDetails = showNodeDetails;
-

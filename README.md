@@ -294,7 +294,7 @@ Educational project for Data Structures and Algorithms course.
 
 ## Author
 
-[Your Name]
+Jimeet, Subhanshu, Gokul
 
 ---
 

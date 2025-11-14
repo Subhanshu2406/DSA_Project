@@ -33,7 +33,8 @@ function displaySearchResults(results) {
     searchResults.innerHTML = results
         .map(result => `
             <div class="search-result-item" data-user-id="${result.user_id}" data-user-name="${result.name}">
-                <strong>${result.name}</strong> (ID: ${result.user_id})
+                <span class="search-username">${result.name}</span>
+                <span class="search-userid">(ID: ${result.user_id})</span>
             </div>
         `)
         .join('');

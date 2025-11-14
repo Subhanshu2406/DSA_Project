@@ -2,6 +2,42 @@
 
 // API_BASE_URL is defined in api.js
 
+// Interest mapping: Convert placeholder interests to real names
+const INTEREST_MAPPING = {
+    'interest_0': 'Technology',
+    'interest_1': 'Music',
+    'interest_2': 'Sports',
+    'interest_3': 'Travel',
+    'interest_4': 'Food & Cooking',
+    'interest_5': 'Photography',
+    'interest_6': 'Fitness',
+    'interest_7': 'Art & Design',
+    'interest_8': 'Gaming',
+    'interest_9': 'Movies & TV',
+    'interest_10': 'Reading',
+    'interest_11': 'Fashion',
+    'interest_12': 'Nature & Outdoors',
+    'interest_13': 'Science',
+    'interest_14': 'Business',
+    'interest_15': 'Education',
+    'interest_16': 'Health & Wellness',
+    'interest_17': 'Comedy & Humor',
+    'interest_18': 'Politics',
+    'interest_19': 'DIY & Crafts'
+};
+
+// Convert interest placeholder to real name
+function getInterestName(interest) {
+    if (typeof interest !== 'string') return interest;
+    return INTEREST_MAPPING[interest] || interest;
+}
+
+// Convert array of interests to real names
+function mapInterests(interests) {
+    if (!Array.isArray(interests)) return interests;
+    return interests.map(getInterestName);
+}
+
 // Debounce function for search
 function debounce(func, wait) {
     let timeout;
@@ -75,12 +111,13 @@ function createNodeDetailHTML(node) {
     }
 
     if (node.interests && node.interests.length > 0) {
+        const mappedInterests = mapInterests(node.interests);
         html += `
             <div class="node-detail-item">
                 <div class="node-detail-label">Interests</div>
                 <div class="node-detail-value">
                     <ul class="node-detail-list">
-                        ${node.interests.map(interest => `<li>${interest}</li>`).join('')}
+                        ${mappedInterests.map(interest => `<li>${interest}</li>`).join('')}
                     </ul>
                 </div>
             </div>
@@ -131,7 +168,13 @@ if (typeof module !== 'undefined' && module.exports) {
         showLoading,
         showError,
         createNodeDetailHTML,
-        stringToColor
+        stringToColor,
+        getInterestName,
+        mapInterests
     };
 }
+
+// Make functions globally available
+window.getInterestName = getInterestName;
+window.mapInterests = mapInterests;
 

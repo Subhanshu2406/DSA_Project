@@ -128,10 +128,34 @@ body {
     cursor: pointer;
     border-bottom: 1px solid #eee;
     transition: background-color 0.2s;
+    color: #2c3e50;
+    background-color: white;
+}
+
+.search-username {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 15px;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.search-userid {
+    color: #7f8c8d;
+    font-size: 13px;
+    font-weight: normal;
 }
 
 .search-result-item:hover {
-    background-color: #f0f0f0;
+    background-color: #e8f4f8;
+}
+
+.search-result-item:hover .search-username {
+    color: #3498db;
+}
+
+.search-result-item:hover .search-userid {
+    color: #5dade2;
 }
 
 .search-result-item:last-child {

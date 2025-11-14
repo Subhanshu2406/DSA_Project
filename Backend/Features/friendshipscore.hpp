@@ -190,123 +190,131 @@
              return result;
          }
          
-         // Check if they are friends
-         bool are_friends = graph.getFriends(node1).count(node2) > 0;
-         
-         // Get edge data
-         const Edge* edge = getEdge(node1, node2);
-         int message_count = edge ? edge->message_count : 0;
-         string established_at = edge ? edge->established_at : "";
-         
-         // Get mutual friends
-         auto mutual_friends = AlgoUtils::set_intersection_of_two(
-             graph.getFriends(node1),
-             graph.getFriends(node2));
-         int mutual_count = mutual_friends.size();
-         
-         // Calculate mutual friends score (transitive)
-         double mutual_friends_score = calculateMutualFriendsScore(node1, node2);
-         
-         // Calculate time factor
-         double time_factor = calculateTimeFactor(established_at);
-         
-         // Calculate geographic proximity
-         double geo_proximity = calculateGeographicProximity(
-             n1->location.latitude, n1->location.longitude,
-             n2->location.latitude, n2->location.longitude);
-         
-         // Calculate common interests
-         auto common_interests = AlgoUtils::find_common_items(
-             n1->interests, n2->interests);
-         int interests_count = common_interests.size();
-         
-         // ========== SCORE CALCULATION ==========
-         // Base score: 1.5 for friends, 2.5 for non-friends
-         double base_score = are_friends ? 1.5 : 2.5;
-         
-         // Factor 1: Mutual friends (strongest indicator)
-         // More mutual friends = lower score (stronger friendship)
-         double mutual_factor = 0.0;
-         if (mutual_count > 0) {
-             // Normalize: 0 mutual = 0, 10+ mutual = -0.3
-             double normalized_mutual = AlgoUtils::normalize_to_01(mutual_count, 10.0);
-             mutual_factor = -0.3 * normalized_mutual;  // Negative = reduces score
-         }
-         
-         // Factor 2: Message count (engagement indicator)
-         // More messages = lower score (stronger friendship)
-         double message_factor = 0.0;
-         if (message_count > 0) {
-             // Normalize: 0 messages = 0, 1000+ messages = -0.25
-             double normalized_messages = AlgoUtils::normalize_to_01(message_count, 1000.0);
-             message_factor = -0.25 * normalized_messages;
-         }
-         
-         // Factor 3: Mutual friends' friendship scores (transitive)
-         // If mutual friends are close, these two are likely closer too
-         double transitive_factor = 0.0;
-         if (mutual_friends_score < 1.5) {  // If mutual friends are close
-             // Lower mutual_friends_score = stronger transitive bond
-             double normalized = (1.5 - mutual_friends_score) / 0.5;  // 0 to 1
-             transitive_factor = -0.15 * normalized;
-         }
-         
-         // Factor 4: Time of connection
-         // Longer connection = lower score (stronger friendship)
-         double time_factor_impact = -0.15 * time_factor;
-         
-         // Factor 5: Geographic proximity
-         // Closer = lower score (stronger friendship)
-         double geo_factor = -0.1 * geo_proximity;
-         
-         // Factor 6: Common interests
-         // More interests = lower score (stronger friendship)
-         double interests_factor = 0.0;
-         if (interests_count > 0) {
-             double normalized_interests = AlgoUtils::normalize_to_01(interests_count, 5.0);
-             interests_factor = -0.1 * normalized_interests;
-         }
-         
-         // Calculate final score
-         double raw_score = base_score + mutual_factor + message_factor + 
-                           transitive_factor + time_factor_impact + 
-                           geo_factor + interests_factor;
-         
-         // Normalize to [1.0, 3.0] range
-         // Friends: [1.0, 2.0], Non-friends: [2.0, 3.0]
-         double final_score;
-         if (are_friends) {
-             // Friends: clamp to [1.0, 2.0]
-             final_score = max(1.0, min(2.0, raw_score));
-         } else {
-             // Non-friends: clamp to [2.0, 3.0]
-             final_score = max(2.0, min(3.0, raw_score));
-         }
-         
-         // Build result
-         FriendshipScoreResult result;
-         result.friendship_score = final_score;
-         result.are_friends = are_friends;
-         result.mutual_friends_count = mutual_count;
-         result.message_count = message_count;
-         result.mutual_friends_score = mutual_friends_score;
-         result.time_factor = time_factor;
-         result.geographic_proximity = geo_proximity;
-         result.common_interests_count = interests_count;
-         
-         // Generate explanation
-         stringstream ss;
-         if (are_friends) {
-             ss << "Friends with score " << fixed << setprecision(2) << final_score;
-             if (mutual_count > 0) ss << " (" << mutual_count << " mutual friends)";
-             if (message_count > 0) ss << ", " << message_count << " messages";
-         } else {
-             ss << "Not friends, score " << fixed << setprecision(2) << final_score;
-             if (mutual_count > 0) ss << " (" << mutual_count << " mutual connections)";
-         }
-         result.explanation = ss.str();
-         
-         return result;
+        // Get edge data first
+        const Edge* edge = getEdge(node1, node2);
+        
+        // Check if they are friends - check both directions to be safe
+        set<int> node1Friends = graph.getFriends(node1);
+        set<int> node2Friends = graph.getFriends(node2);
+        bool are_friends = (node1Friends.count(node2) > 0) || (node2Friends.count(node1) > 0);
+        
+        // Also check if there's a direct edge with relationship_type == "friend"
+        if (edge && edge->relationship_type == "friend") {
+            are_friends = true;
+        }
+        
+        int message_count = edge ? edge->message_count : 0;
+        string established_at = edge ? edge->established_at : "";
+        
+        // Get mutual friends
+        auto mutual_friends = AlgoUtils::set_intersection_of_two(
+            graph.getFriends(node1),
+            graph.getFriends(node2));
+        int mutual_count = mutual_friends.size();
+        
+        // Calculate mutual friends score (transitive)
+        double mutual_friends_score = calculateMutualFriendsScore(node1, node2);
+        
+        // Calculate time factor
+        double time_factor = calculateTimeFactor(established_at);
+        
+        // Calculate geographic proximity
+        double geo_proximity = calculateGeographicProximity(
+            n1->location.latitude, n1->location.longitude,
+            n2->location.latitude, n2->location.longitude);
+        
+        // Calculate common interests
+        auto common_interests = AlgoUtils::find_common_items(
+            n1->interests, n2->interests);
+        int interests_count = common_interests.size();
+        
+        // ========== SCORE CALCULATION ==========
+        // Base score: 1.5 for friends, 2.5 for non-friends
+        double base_score = are_friends ? 1.5 : 2.5;
+        
+        // Factor 1: Mutual friends (strongest indicator)
+        // More mutual friends = lower score (stronger friendship)
+        double mutual_factor = 0.0;
+        if (mutual_count > 0) {
+            // Normalize: 0 mutual = 0, 10+ mutual = -0.3
+            double normalized_mutual = AlgoUtils::normalize_to_01(mutual_count, 10.0);
+            mutual_factor = -0.3 * normalized_mutual;  // Negative = reduces score
+        }
+        
+        // Factor 2: Message count (engagement indicator)
+        // More messages = lower score (stronger friendship)
+        double message_factor = 0.0;
+        if (message_count > 0) {
+            // Normalize: 0 messages = 0, 1000+ messages = -0.25
+            double normalized_messages = AlgoUtils::normalize_to_01(message_count, 1000.0);
+            message_factor = -0.25 * normalized_messages;
+        }
+        
+        // Factor 3: Mutual friends' friendship scores (transitive)
+        // If mutual friends are close, these two are likely closer too
+        double transitive_factor = 0.0;
+        if (mutual_friends_score < 1.5) {  // If mutual friends are close
+            // Lower mutual_friends_score = stronger transitive bond
+            double normalized = (1.5 - mutual_friends_score) / 0.5;  // 0 to 1
+            transitive_factor = -0.15 * normalized;
+        }
+        
+        // Factor 4: Time of connection
+        // Longer connection = lower score (stronger friendship)
+        double time_factor_impact = -0.15 * time_factor;
+        
+        // Factor 5: Geographic proximity
+        // Closer = lower score (stronger friendship)
+        double geo_factor = -0.1 * geo_proximity;
+        
+        // Factor 6: Common interests
+        // More interests = lower score (stronger friendship)
+        double interests_factor = 0.0;
+        if (interests_count > 0) {
+            double normalized_interests = AlgoUtils::normalize_to_01(interests_count, 5.0);
+            interests_factor = -0.1 * normalized_interests;
+        }
+        
+        // Calculate final score
+        double raw_score = base_score + mutual_factor + message_factor + 
+                          transitive_factor + time_factor_impact + 
+                          geo_factor + interests_factor;
+        
+        // Normalize to [1.0, 3.0] range
+        // Friends: [1.0, 2.0], Non-friends: [2.0, 3.0]
+        double final_score;
+        if (are_friends) {
+            // Friends: clamp to [1.0, 2.0]
+            final_score = max(1.0, min(2.0, raw_score));
+        } else {
+            // Non-friends: clamp to [2.0, 3.0]
+            final_score = max(2.0, min(3.0, raw_score));
+        }
+        
+        // Build result
+        FriendshipScoreResult result;
+        result.friendship_score = final_score;
+        result.are_friends = are_friends;
+        result.mutual_friends_count = mutual_count;
+        result.message_count = message_count;
+        result.mutual_friends_score = mutual_friends_score;
+        result.time_factor = time_factor;
+        result.geographic_proximity = geo_proximity;
+        result.common_interests_count = interests_count;
+        
+        // Generate explanation
+        stringstream ss;
+        if (are_friends) {
+            ss << "Friends with score " << fixed << setprecision(2) << final_score;
+            if (mutual_count > 0) ss << " (" << mutual_count << " mutual friends)";
+            if (message_count > 0) ss << ", " << message_count << " messages";
+        } else {
+            ss << "Not friends, score " << fixed << setprecision(2) << final_score;
+            if (mutual_count > 0) ss << " (" << mutual_count << " mutual connections)";
+        }
+        result.explanation = ss.str();
+        
+        return result;
      }
  
  public:

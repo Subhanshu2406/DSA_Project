@@ -244,6 +244,30 @@ private:
     }
 
     PathFindResult compute_path_internal(int source_id, int target_id) const {
+        // First check if they are directly connected (friends or following)
+        set<int> sourceFriends = graph.getFriends(source_id);
+        set<int> sourceFollowing = graph.getFollowing(source_id);
+        
+        // Check if target is a friend (mutual connection)
+        if (sourceFriends.count(target_id) > 0) {
+            vector<int> directPath = {source_id, target_id};
+            return create_success_result(directPath);
+        }
+        
+        // Check if source follows target (direct edge)
+        if (sourceFollowing.count(target_id) > 0) {
+            vector<int> directPath = {source_id, target_id};
+            return create_success_result(directPath);
+        }
+        
+        // Check if target follows source (reverse direction)
+        set<int> targetFollowing = graph.getFollowing(target_id);
+        if (targetFollowing.count(source_id) > 0) {
+            vector<int> directPath = {source_id, target_id};
+            return create_success_result(directPath);
+        }
+        
+        // If not directly connected, use BFS
         PathFindResult result = bidirectional_bfs(source_id, target_id);
         if (!result.path_exists) {
             result = simple_bfs(source_id, target_id);

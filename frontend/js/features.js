@@ -367,7 +367,7 @@ function displayShortestPath(result, source, target) {
                 <div style="margin-top: 10px; color: #7f8c8d; font-size: 12px;">${result.friendship_explanation || ''}</div>
             </div>
             <div class="node-detail-label">Path Length</div>
-            <div class="node-detail-value">${result.path_length} hops</div>
+            <div class="node-detail-value">${result.path_length === 1 ? 'Direct connection (1 hop)' : result.path_length + ' hops'}</div>
             <div class="node-detail-label" style="margin-top: 15px;">Path Description</div>
             <div class="node-detail-value">${result.path_description || 'N/A'}</div>
             <div class="node-detail-label" style="margin-top: 15px;">Path Nodes</div>

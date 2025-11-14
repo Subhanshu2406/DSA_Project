@@ -2,9 +2,18 @@
 
 const API_BASE_URL = 'http://localhost:8080';
 
-async function fetchAPI(endpoint, options = {}) {
+function appendDate(endpoint, includeDate = true) {
+    if (!includeDate) return endpoint;
+    const date = window.currentDatasetDate;
+    if (!date) return endpoint;
+    const separator = endpoint.includes('?') ? '&' : '?';
+    return `${endpoint}${separator}date=${encodeURIComponent(date)}`;
+}
+
+async function fetchAPI(endpoint, options = {}, includeDate = true) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const url = `${API_BASE_URL}${appendDate(endpoint, includeDate)}`;
+        const response = await fetch(url, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -21,6 +30,11 @@ async function fetchAPI(endpoint, options = {}) {
         console.error('API Error:', error);
         throw error;
     }
+}
+
+// Get dataset dates
+async function getAvailableDates() {
+    return await fetchAPI('/api/dates', {}, false);
 }
 
 // Get full graph data
@@ -72,6 +86,7 @@ async function getRecommendations(userId, count = 10) {
 // Export functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        getAvailableDates,
         getGraph,
         getNodeDetails,
         searchUsers,

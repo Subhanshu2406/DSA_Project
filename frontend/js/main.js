@@ -5,32 +5,51 @@ let nodes = null;
 let edges = null;
 let selectedNodes = [];
 let communityColors = {};
+let availableDates = [];
+let currentDatasetDate = null;
+let dateNavigationEnabled = false;
 
 // Initialize vis-network
-async function initializeGraph() {
+async function initializeGraph(date = currentDatasetDate) {
     try {
-        console.log('Loading graph data...');
-        // Load graph data
-        const graphData = await getGraph();
-        console.log('Graph data loaded:', graphData);
-        console.log('Nodes count:', graphData.nodes ? graphData.nodes.length : 0);
-        console.log('Edges count:', graphData.edges ? graphData.edges.length : 0);
-        
-        if (!graphData.nodes || graphData.nodes.length === 0) {
-            throw new Error('No nodes found in graph data');
+        if (typeof date !== 'undefined') {
+            currentDatasetDate = date;
         }
-        
+        window.currentDatasetDate = currentDatasetDate || null;
+        updateDateDisplay();
+
+        const logDate = currentDatasetDate || 'default';
+        console.log(`Loading graph data for ${logDate}...`);
+
         // Check if container exists
         const container = document.getElementById('cy');
         if (!container) {
             throw new Error('Graph container not found');
         }
-        
-        // Ensure container is visible
+
+        // Show loading state
+        container.innerHTML = '<div class="graph-loading">Loading graph...</div>';
         container.style.width = '100%';
         container.style.height = '100%';
         container.style.minHeight = '400px';
-        
+
+        if (network) {
+            network.destroy();
+            network = null;
+        }
+
+        // Load graph data
+        const graphData = await getGraph();
+        console.log('Graph data loaded:', graphData);
+        console.log('Nodes count:', graphData.nodes ? graphData.nodes.length : 0);
+        console.log('Edges count:', graphData.edges ? graphData.edges.length : 0);
+
+        if (!graphData.nodes || graphData.nodes.length === 0) {
+            throw new Error('No nodes found in graph data');
+        }
+
+        container.innerHTML = '';
+
         // Convert API format to vis-network format
         const visNodes = new vis.DataSet(
             graphData.nodes.map(node => ({
@@ -321,12 +340,16 @@ async function initializeGraph() {
         window.network = network;
         window.nodes = nodes;
         window.edges = edges;
+        window.currentDatasetDate = currentDatasetDate;
         
-        console.log('vis-network initialized with', graphData.nodes.length, 'nodes and', graphData.edges.length, 'edges');
+        console.log(`vis-network initialized for ${currentDatasetDate} with`,
+            graphData.nodes.length, 'nodes and', graphData.edges.length, 'edges');
     } catch (error) {
         console.error('Error initializing graph:', error);
         const errorMsg = error.message || 'Unknown error';
-        document.getElementById('cy').innerHTML = `
+        const container = document.getElementById('cy');
+        if (container) {
+            container.innerHTML = `
             <div style="padding: 20px; text-align: center; color: #e74c3c;">
                 <h3>Error loading graph data</h3>
                 <p>${errorMsg}</p>
@@ -334,6 +357,100 @@ async function initializeGraph() {
                 <p>Check the browser console for more details.</p>
             </div>
         `;
+        }
+    }
+}
+
+function updateDateDisplay() {
+    const display = document.getElementById('currentDateDisplay');
+    const prevBtn = document.getElementById('btnPrevDate');
+    const nextBtn = document.getElementById('btnNextDate');
+    const controls = document.querySelector('.date-controls');
+
+    if (!display) return;
+
+    if (!dateNavigationEnabled || availableDates.length === 0) {
+        display.textContent = currentDatasetDate || 'Default';
+        if (controls) controls.classList.add('disabled');
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
+    }
+
+    const index = availableDates.indexOf(currentDatasetDate);
+    display.textContent = currentDatasetDate || '--';
+    if (controls) controls.classList.remove('disabled');
+    if (prevBtn) {
+        prevBtn.disabled = index <= 0;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = index === -1 || index >= availableDates.length - 1;
+    }
+}
+
+function setupDateControls() {
+    const prevBtn = document.getElementById('btnPrevDate');
+    const nextBtn = document.getElementById('btnNextDate');
+    if (prevBtn && !prevBtn.dataset.listener) {
+        prevBtn.addEventListener('click', () => changeDataset(-1));
+        prevBtn.dataset.listener = 'true';
+    }
+    if (nextBtn && !nextBtn.dataset.listener) {
+        nextBtn.addEventListener('click', () => changeDataset(1));
+        nextBtn.dataset.listener = 'true';
+    }
+}
+
+async function changeDataset(offset) {
+    if (!dateNavigationEnabled || !availableDates.length) return;
+    const currentIndex = availableDates.indexOf(currentDatasetDate);
+    const newIndex = currentIndex + offset;
+    if (newIndex < 0 || newIndex >= availableDates.length) return;
+    const newDate = availableDates[newIndex];
+    if (newDate === currentDatasetDate) return;
+    await initializeGraph(newDate);
+}
+
+async function initializeApp() {
+    try {
+        console.log('Fetching available dates from /api/dates...');
+        const datasetInfo = await getAvailableDates();
+        console.log('Dates response:', datasetInfo);
+        availableDates = Array.isArray(datasetInfo?.available) ? datasetInfo.available : [];
+        if (availableDates.length > 0) {
+            dateNavigationEnabled = true;
+            currentDatasetDate = datasetInfo.default || availableDates[0];
+            console.log(`Date navigation enabled. Found ${availableDates.length} dates. Default: ${currentDatasetDate}`);
+        } else {
+            dateNavigationEnabled = false;
+            currentDatasetDate = datasetInfo?.default || null;
+            console.warn('No dates found in response, date navigation disabled');
+        }
+    } catch (error) {
+        console.warn('Dataset dates endpoint unavailable, using default dataset.', error);
+        console.warn('This usually means the backend needs to be recompiled with the new date navigation code.');
+        dateNavigationEnabled = false;
+        availableDates = [];
+        currentDatasetDate = null;
+    }
+
+    setupDateControls();
+    updateDateDisplay();
+
+    try {
+        await initializeGraph(currentDatasetDate);
+    } catch (error) {
+        console.error('Initialization error:', error);
+        const container = document.getElementById('cy');
+        if (container) {
+            container.innerHTML = `
+                <div class="graph-error">
+                    <h3>Unable to initialize</h3>
+                    <p>${error.message || 'Unknown error'}</p>
+                    <p>Please ensure the API server is running.</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -499,7 +616,7 @@ document.getElementById('closeNodeDetails').addEventListener('click', () => {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeGraph();
+    initializeApp();
 });
 
 // Export functions for use in other modules

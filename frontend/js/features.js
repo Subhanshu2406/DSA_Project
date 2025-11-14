@@ -3,6 +3,7 @@
 // network is declared in main.js, we'll reference it from window
 
 // Wait for DOM and vis-network to be ready
+
 document.addEventListener('DOMContentLoaded', () => {
     setupFeatureHandlers();
     
@@ -324,13 +325,47 @@ function displayShortestPath(result, source, target) {
     panel.classList.remove('hidden');
     title.textContent = `Shortest Path: User ${source} → User ${target}`;
     
+    // Display friendship score information
+    const friendshipScore = result.friendship_score !== undefined ? result.friendship_score : null;
+    const areFriends = result.are_friends !== undefined ? result.are_friends : false;
+    
     if (!result.path_exists) {
-        content.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">No path found between these users</div>';
+        let noPathHtml = '<div style="padding: 20px; text-align: center; color: #e74c3c;">No path found between these users</div>';
+        
+        // Still show friendship score even if no path
+        if (friendshipScore !== null) {
+            noPathHtml += `
+                <div style="padding: 20px; margin-top: 15px; background: #ecf0f1; border-radius: 5px;">
+                    <div class="node-detail-label">Friendship Score</div>
+                    <div class="node-detail-value" style="font-size: 24px; font-weight: bold; color: ${areFriends ? '#27ae60' : '#e74c3c'};">
+                        ${friendshipScore.toFixed(2)}
+                    </div>
+                    ${!areFriends ? '<div style="margin-top: 10px; color: #e74c3c; font-weight: bold;">Not friends</div>' : ''}
+                    <div style="margin-top: 10px; color: #7f8c8d; font-size: 12px;">${result.friendship_explanation || ''}</div>
+                </div>
+            `;
+        }
+        
+        content.innerHTML = noPathHtml;
+        
+        // Highlight source and target nodes even if no path
+        if (window.clearHighlights) clearHighlights();
+        if (window.network && window.highlightNodes) {
+            highlightNodes([source, target], 'selected');
+        }
         return;
     }
 
     let html = `
         <div class="path-display">
+            <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <div class="node-detail-label">Friendship Score</div>
+                <div class="node-detail-value" style="font-size: 24px; font-weight: bold; color: ${areFriends ? '#27ae60' : '#e74c3c'};">
+                    ${friendshipScore !== null ? friendshipScore.toFixed(2) : 'N/A'}
+                </div>
+                ${!areFriends ? '<div style="margin-top: 10px; color: #e74c3c; font-weight: bold;">Not friends</div>' : ''}
+                <div style="margin-top: 10px; color: #7f8c8d; font-size: 12px;">${result.friendship_explanation || ''}</div>
+            </div>
             <div class="node-detail-label">Path Length</div>
             <div class="node-detail-value">${result.path_length} hops</div>
             <div class="node-detail-label" style="margin-top: 15px;">Path Description</div>
@@ -352,20 +387,43 @@ function displayShortestPath(result, source, target) {
     // Highlight path
     if (window.clearHighlights) clearHighlights();
     if (window.network && window.highlightNodes) {
+        // Highlight all path nodes
         highlightNodes(result.path_node_ids, 'selected');
+        
+        // Also highlight source and target nodes with a different style to make them stand out
+        if (window.nodes) {
+            [source, target].forEach(nodeId => {
+                const node = window.nodes.get(nodeId.toString());
+                if (node) {
+                    window.nodes.update({
+                        id: nodeId.toString(),
+                        color: {
+                            background: '#e74c3c',
+                            border: '#c0392b',
+                            highlight: {
+                                background: '#e74c3c',
+                                border: '#c0392b'
+                            }
+                        },
+                        borderWidth: 6,
+                        size: 25
+                    });
+                }
+            });
+        }
         
         // Highlight edges in path
         if (window.edges) {
             const pathEdgeIds = [];
             for (let i = 0; i < result.path_node_ids.length - 1; i++) {
-                const source = result.path_node_ids[i].toString();
-                const target = result.path_node_ids[i + 1].toString();
+                const sourceNode = result.path_node_ids[i].toString();
+                const targetNode = result.path_node_ids[i + 1].toString();
                 
                 // Find edge between source and target
                 const allEdges = window.edges.get();
                 const edge = allEdges.find(e => 
-                    (e.from === source && e.to === target) || 
-                    (e.from === target && e.to === source)
+                    (e.from === sourceNode && e.to === targetNode) || 
+                    (e.from === targetNode && e.to === sourceNode)
                 );
                 if (edge) {
                     pathEdgeIds.push(edge.id);
@@ -452,4 +510,3 @@ function displayRecommendations(recommendations) {
         });
     });
 }
-

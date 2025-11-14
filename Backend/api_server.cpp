@@ -338,11 +338,18 @@ private:
 
     string handlePath(GraphAlgorithms& algorithms, int source, int target) {
         auto result = algorithms.find_shortest_path(source, target);
+        
+        // Calculate friendship score
+        auto friendshipResult = algorithms.calculate_friendship_score(source, target);
+        
         json response;
         response["path_exists"] = result.path_exists;
         response["path_length"] = result.path_length;
         response["path_node_ids"] = result.path_node_ids;
         response["path_description"] = result.path_description;
+        response["friendship_score"] = friendshipResult.friendship_score;
+        response["are_friends"] = friendshipResult.are_friends;
+        response["friendship_explanation"] = friendshipResult.explanation;
         return createHTTPResponse(response.dump());
     }
 

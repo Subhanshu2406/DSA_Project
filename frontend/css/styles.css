@@ -35,6 +35,61 @@ body {
     max-width: 400px;
 }
 
+.date-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.date-controls.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.date-display {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    min-width: 110px;
+}
+
+.date-label {
+    font-size: 12px;
+    color: #bdc3c7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#currentDateDisplay {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ecf0f1;
+}
+
+.date-btn {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ecf0f1;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+.date-btn:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.date-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 #searchInput {
     width: 100%;
     padding: 10px 15px;
@@ -126,6 +181,28 @@ body {
     position: relative;
     min-height: 400px;
     width: 100%;
+}
+
+.graph-loading,
+.graph-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 18px 24px;
+    border-radius: 8px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    max-width: 260px;
+}
+
+.graph-loading {
+    background-color: rgba(44, 62, 80, 0.85);
+}
+
+.graph-error {
+    background-color: rgba(192, 57, 43, 0.9);
 }
 
 /* Sidebars */

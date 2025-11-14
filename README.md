@@ -14,14 +14,14 @@ The system analyzes social networks with features like mutual friends, influence
 ## Features
 
 ### Graph Analysis Algorithms
-- ✅ **Mutual Friends**: Find common connections between users (O(min(deg1, deg2)))
-- ✅ **Influencer Ranking**: PageRank-based leaderboard (O(V × log(K) + E × I))
-- ✅ **Community Detection**: Label propagation algorithm (O(V × avg_degree × iterations))
-- ✅ **Shortest Path**: Bidirectional BFS path finding (O(V + E))
-- ✅ **Friend Recommendations**: Multi-factor scoring system (O(V × avg_degree²))
-- ✅ **Friendship Score**: Relationship strength calculation
-- ✅ **User Search**: Trie-based autocomplete (O(P + R))
-- ✅ **Centrality Analysis**: Degree, closeness, clustering metrics
+-  **Mutual Friends**: Find common connections between users 
+-  **Influencer Ranking**: PageRank-based leaderboard 
+-  **Community Detection**: Label propagation algorithm 
+-  **Shortest Path**: Bidirectional BFS path finding 
+-  **Friend Recommendations**: Multi-factor scoring system 
+-  **Friendship Score**: Relationship strength calculation
+-  **User Search**: Trie-based autocomplete 
+-  **Centrality Analysis**: Degree, closeness, clustering metrics
 
 ### Visualization Features
 - Interactive graph with zoom, pan, hover effects

@@ -72,7 +72,7 @@ private:
         json nodesArray = json::array();
         json edgesArray = json::array();
 
-        // Convert nodes to Cytoscape format
+        // Convert nodes to vis-network format (keeping same structure for compatibility)
         for (const auto& [id, node] : graph->getNodes()) {
             json nodeJson;
             nodeJson["data"]["id"] = to_string(node.user_id);
@@ -85,12 +85,10 @@ private:
             nodeJson["data"]["region_id"] = node.region_id;
             nodeJson["data"]["interests"] = node.interests;
             nodeJson["data"]["location"] = {node.location.latitude, node.location.longitude};
-            // Add position for initial layout (will be overridden by layout algorithm)
-            nodeJson["position"] = json::object();
             nodesArray.push_back(nodeJson);
         }
 
-        // Convert edges to Cytoscape format
+        // Convert edges to vis-network format
         int edgeId = 0;
         for (const auto& edge : graph->getEdges()) {
             // Only add edge if both source and target nodes exist

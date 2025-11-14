@@ -119,8 +119,8 @@ body {
     overflow: hidden;
 }
 
-/* Cytoscape Container */
-.cytoscape-container {
+/* Graph Container */
+.graph-container {
     flex: 1;
     background-color: #ecf0f1;
     position: relative;

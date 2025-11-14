@@ -1,13 +1,13 @@
 // Feature button handlers
 
-// cy is declared in main.js, we'll reference it from window
+// network is declared in main.js, we'll reference it from window
 
-// Wait for DOM and Cytoscape to be ready
+// Wait for DOM and vis-network to be ready
 document.addEventListener('DOMContentLoaded', () => {
     setupFeatureHandlers();
     
-    // Wait for Cytoscape to initialize
-    // cy will be available via window.cy from main.js
+    // Wait for vis-network to initialize
+    // network will be available via window.network from main.js
 });
 
 function setupFeatureHandlers() {
@@ -208,7 +208,7 @@ function displayMutualFriends(result) {
 
     // Highlight nodes
     if (window.clearHighlights) clearHighlights();
-    if (window.cy && window.highlightNodes) {
+    if (window.network && window.highlightNodes) {
         highlightNodes([result.user_id_1, result.user_id_2], 'selected');
         if (result.mutual_ids.length > 0) {
             highlightNodes(result.mutual_ids, 'mutual-friend');
@@ -247,13 +247,33 @@ function displayLeaderboard(leaderboard) {
     content.querySelectorAll('.leaderboard-item').forEach(item => {
         item.addEventListener('click', () => {
             const userId = parseInt(item.dataset.userId);
-            if (window.cy) {
-                const node = window.cy.getElementById(userId.toString());
-                if (node.length > 0) {
+            if (window.network && window.nodes) {
+                const node = window.nodes.get(userId.toString());
+                if (node) {
                     if (window.clearHighlights) clearHighlights();
-                    node.addClass('selected');
-                    window.cy.center(node);
-                    window.cy.fit(node, 100);
+                    window.highlightNodes([userId], 'selected');
+                    window.network.selectNodes([userId.toString()]);
+                    // Show label for selected node
+                    if (window.nodes) {
+                        const node = window.nodes.get(userId.toString());
+                        if (node) {
+                            window.nodes.update({
+                                id: userId.toString(),
+                                font: {
+                                    size: 14,
+                                    face: 'Arial',
+                                    color: '#2c3e50'
+                                }
+                            });
+                        }
+                    }
+                    window.network.focus(userId.toString(), {
+                        scale: 1.5,
+                        animation: {
+                            duration: 1000,
+                            easingFunction: 'easeInOutQuad'
+                        }
+                    });
                     if (window.showNodeDetails) showNodeDetails(userId);
                 }
             }
@@ -290,7 +310,7 @@ function displayCommunities(communities) {
     content.innerHTML = html;
     
     // Apply community colors to graph
-    if (window.cy && window.applyCommunityColors) {
+    if (window.network && window.applyCommunityColors) {
         applyCommunityColors(communities);
     }
 }
@@ -331,16 +351,28 @@ function displayShortestPath(result, source, target) {
 
     // Highlight path
     if (window.clearHighlights) clearHighlights();
-    if (window.cy && window.highlightNodes) {
+    if (window.network && window.highlightNodes) {
         highlightNodes(result.path_node_ids, 'selected');
         
         // Highlight edges in path
-        for (let i = 0; i < result.path_node_ids.length - 1; i++) {
-            const source = result.path_node_ids[i].toString();
-            const target = result.path_node_ids[i + 1].toString();
-            const edge = window.cy.edges(`[source = "${source}"][target = "${target}"]`);
-            if (edge.length > 0) {
-                edge.addClass('path-edge');
+        if (window.edges) {
+            const pathEdgeIds = [];
+            for (let i = 0; i < result.path_node_ids.length - 1; i++) {
+                const source = result.path_node_ids[i].toString();
+                const target = result.path_node_ids[i + 1].toString();
+                
+                // Find edge between source and target
+                const allEdges = window.edges.get();
+                const edge = allEdges.find(e => 
+                    (e.from === source && e.to === target) || 
+                    (e.from === target && e.to === source)
+                );
+                if (edge) {
+                    pathEdgeIds.push(edge.id);
+                }
+            }
+            if (window.highlightEdges) {
+                highlightEdges(pathEdgeIds, 'path-edge');
             }
         }
     }
@@ -387,13 +419,33 @@ function displayRecommendations(recommendations) {
     content.querySelectorAll('.recommendation-item').forEach(item => {
         item.addEventListener('click', () => {
             const userId = parseInt(item.dataset.userId);
-            if (window.cy) {
-                const node = window.cy.getElementById(userId.toString());
-                if (node.length > 0) {
+            if (window.network && window.nodes) {
+                const node = window.nodes.get(userId.toString());
+                if (node) {
                     if (window.clearHighlights) clearHighlights();
-                    node.addClass('selected');
-                    window.cy.center(node);
-                    window.cy.fit(node, 100);
+                    window.highlightNodes([userId], 'selected');
+                    window.network.selectNodes([userId.toString()]);
+                    // Show label for selected node
+                    if (window.nodes) {
+                        const node = window.nodes.get(userId.toString());
+                        if (node) {
+                            window.nodes.update({
+                                id: userId.toString(),
+                                font: {
+                                    size: 14,
+                                    face: 'Arial',
+                                    color: '#2c3e50'
+                                }
+                            });
+                        }
+                    }
+                    window.network.focus(userId.toString(), {
+                        scale: 1.5,
+                        animation: {
+                            duration: 1000,
+                            easingFunction: 'easeInOutQuad'
+                        }
+                    });
                     if (window.showNodeDetails) showNodeDetails(userId);
                 }
             }

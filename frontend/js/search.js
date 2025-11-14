@@ -56,16 +56,36 @@ function selectUserFromSearch(userId, userName) {
     searchResults.classList.remove('show');
     
     // Highlight and center the node
-    if (window.cy) {
-        const node = window.cy.getElementById(userId.toString());
-        if (node.length > 0) {
+    if (window.network && window.nodes) {
+        const node = window.nodes.get(userId.toString());
+        if (node) {
             // Clear previous selection
-            window.cy.elements().removeClass('selected');
+            if (window.clearHighlights) clearHighlights();
             
             // Select and highlight
-            node.addClass('selected');
-            window.cy.center(node);
-            window.cy.fit(node, 100);
+            window.highlightNodes([userId], 'selected');
+            window.network.selectNodes([userId.toString()]);
+            // Show label for selected node
+            if (window.nodes) {
+                const node = window.nodes.get(userId.toString());
+                if (node) {
+                    window.nodes.update({
+                        id: userId.toString(),
+                        font: {
+                            size: 14,
+                            face: 'Arial',
+                            color: '#2c3e50'
+                        }
+                    });
+                }
+            }
+            window.network.focus(userId.toString(), {
+                scale: 1.5,
+                animation: {
+                    duration: 1000,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
             
             // Show node details
             if (window.showNodeDetails) {

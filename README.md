@@ -124,19 +124,12 @@ Server runs on `http://localhost:8080`
 
 ### Step 4: Open Frontend
 
-**Option 1: Python HTTP Server**
+**Python HTTP Server**
 ```bash
 cd frontend
 python -m http.server 8000
 # Open http://localhost:8000 in browser
 ```
-
-**Option 2: Direct File Opening**
-Simply open `frontend/index.html` in your browser
-
-**Option 3: VS Code Live Server**
-- Install "Live Server" extension
-- Right-click `index.html` → "Open with Live Server"
 
 ## Build Instructions
 
@@ -294,7 +287,9 @@ Educational project for Data Structures and Algorithms course.
 
 ## Author
 
-[Your Name]
+Subhanshu Gupta
+Jimeet Shastri
+Gokul Bansal
 
 ---
 

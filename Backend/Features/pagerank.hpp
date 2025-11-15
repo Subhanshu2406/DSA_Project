@@ -57,7 +57,7 @@ public:
         for (int iteration = 0; iteration < iteration_count; iteration++) {
             map<int, double> new_rank;
 
-            // Base score: each node gets (1 - damping) / N
+            // base score: each node gets (1-damping) / N
             for (const auto& [id, node] : all_nodes) {
                 new_rank[id] = (1.0 - damping_factor) / node_count;
             }

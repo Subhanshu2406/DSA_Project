@@ -64,7 +64,7 @@
      long parseDate(const string& date_str) const {
          if (date_str.empty()) return 0;
          
-         // Try ISO format: "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS"
+      
          string date_part = date_str.substr(0, 10);
          if (date_part.length() != 10) return 0;
          

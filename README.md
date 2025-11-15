@@ -131,8 +131,6 @@ python -m http.server 8000
 # Open http://localhost:8000 in browser
 ```
 
-## Build Instructions
-
 ### Backend Compilation
 
 **Windows (MinGW/MSVC):**
@@ -156,17 +154,6 @@ g++ -std=c++17 -O2 -I. api_server.cpp -o api_server -lpthread
 - `-I.`: Include current directory (for nlohmann/json.hpp)
 - `-lws2_32` (Windows) / `-lpthread` (Linux/Mac): Socket libraries
 
-### Frontend
-
-No build step required! Just open `index.html` in a browser or use a local HTTP server.
-
-### Dataset Generator
-
-```bash
-cd dataset
-pip install -r requirements.txt
-python generate_dataset.py
-```
 
 ## Technology Stack
 
@@ -199,18 +186,6 @@ python generate_dataset.py
 
 Where: V = nodes, E = edges, I = iterations, K = top K, deg = degree, P = prefix length, R = results, L = name length, M = mutual friends
 
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/graph?date=YYYY-MM-DD` | GET | Get graph nodes and edges |
-| `/api/dates` | GET | Get available dataset dates |
-| `/api/search?q=prefix` | GET | User search autocomplete |
-| `/api/mutual-friends?user1=X&user2=Y` | GET | Find mutual friends |
-| `/api/leaderboard?top_k=10` | GET | Get influencer leaderboard |
-| `/api/communities` | GET | Detect communities |
-| `/api/path?source=X&target=Y` | GET | Find shortest path |
-| `/api/recommendations?user_id=X&count=10` | GET | Get friend recommendations |
 
 ## Configuration
 
@@ -228,35 +203,6 @@ Edit `dataset/config.py`:
 ### Frontend Configuration
 - API base URL: `http://localhost:8080` (in `js/api.js`)
 
-## Testing
-
-### Backend Tests
-```bash
-cd Backend
-g++ -std=c++17 test_features.cpp -o test_features.exe
-./test_features.exe
-```
-
-### Frontend Testing
-- Open browser DevTools (F12)
-- Check console for errors
-- Test API endpoints in Network tab
-
-## Troubleshooting
-
-### Backend Issues
-- **Compilation errors**: Check C++17 support, nlohmann/json.hpp location
-- **Socket errors**: Check port 8080 availability
-- **File not found**: Verify dataset file paths
-
-### Frontend Issues
-- **Graph not loading**: Check backend is running, check browser console
-- **API errors**: Verify backend URL, check CORS settings
-- **Date navigation disabled**: Recompile backend with date support
-
-### Dataset Issues
-- **Generation fails**: Check Python version, verify config.py
-- **No output**: Check output directory permissions
 
 ## Documentation
 
@@ -264,22 +210,6 @@ g++ -std=c++17 test_features.cpp -o test_features.exe
 - **[Frontend README](frontend/README.md)**: Frontend architecture and usage
 - **[Dataset README](dataset/README.md)**: Dataset generation methodology
 
-## Performance
-
-- **Graph size**: Optimized for 100-1000 nodes
-- **Algorithm efficiency**: Most algorithms run in O(V + E) or better
-- **Caching**: Backend caches algorithm results and graph contexts
-- **Visualization**: vis-network optimized for interactive rendering
-
-## Future Enhancements
-
-- [ ] Support for larger graphs (10K+ nodes)
-- [ ] Real-time graph updates via WebSockets
-- [ ] Graph export (PNG, SVG, JSON)
-- [ ] Timeline animation for date changes
-- [ ] 3D graph visualization option
-- [ ] Advanced filtering and search
-- [ ] Graph statistics dashboard
 
 ## License
 
@@ -287,11 +217,8 @@ Educational project for Data Structures and Algorithms course.
 
 ## Author
 
-Subhanshu Gupta
-Jimeet Shastri
-Gokul Bansal
+Subhanshu Gupta (B24CS1072)
+Jimeet Shastri  (B24CS1034)
+Gokul Bansal    (B24CM1025)
 
 ---
-
-**Note**: This is a comprehensive DSA project demonstrating graph algorithms, data structures, and full-stack development. All algorithms are optimized for performance and include complexity analysis.
-

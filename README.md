@@ -217,8 +217,8 @@ Educational project for Data Structures and Algorithms course.
 
 ## Author
 
-Subhanshu Gupta (B24CS1072)
-Jimeet Shastri  (B24CS1034)
+Subhanshu Gupta (B24CS1072)<br>
+Jimeet Shastri  (B24CS1034)<br>
 Gokul Bansal    (B24CM1025)
 
 ---
